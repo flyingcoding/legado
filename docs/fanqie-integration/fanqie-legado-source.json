@@ -1,0 +1,77 @@
+[
+  {
+    "bookSourceUrl": "https://fanqie.example.invalid",
+    "bookSourceName": "番茄小说(unidbg)",
+    "bookSourceGroup": "番茄",
+    "bookSourceType": 0,
+    "bookSourceComment": "番茄小说只读书源，经 fanqie-server + owned full-java/unidbg 服务。请把 bookSourceUrl 改为实际 HTTPS 地址，并把 header 中的 YOUR_SECRET_KEY 替换为公共 API 密钥。搜索、详情、目录和正文兼容原版 Legado；ruleReview 是 fanqie.paragraph-comments.v1 扩展，原版 Legado 不会启用且可能在保存时丢弃，必须完成源码适配后才能显示段评。生产段评不依赖 Frida、模拟器或真机。本书源不提供发评、发布回复、点赞、点踩、删除或举报等写操作。",
+    "enabled": true,
+    "enabledExplore": false,
+    "enabledCookieJar": false,
+    "concurrentRate": "300",
+    "customOrder": 0,
+    "weight": 0,
+    "lastUpdateTime": 0,
+    "header": "{\"Authorization\": \"Bearer YOUR_SECRET_KEY\"}",
+    "respondTime": 180000,
+    "searchUrl": "/api/search?query={{key}}&count=20&offset={{(page-1)*20}}",
+    "ruleSearch": {
+      "bookList": "$.data.results",
+      "name": "$.book_name",
+      "author": "$.author",
+      "kind": "$.category",
+      "coverUrl": "$.cover_url",
+      "intro": "$.description",
+      "wordCount": "$.word_count",
+      "bookUrl": "/api/book/detail?book_id={$.book_id}"
+    },
+    "ruleBookInfo": {
+      "name": "$.data.book_name",
+      "author": "$.data.author",
+      "kind": "$.data.category",
+      "coverUrl": "$.data.cover_url",
+      "intro": "$.data.description",
+      "wordCount": "$.data.word_count",
+      "tocUrl": "/api/book/directory?book_id={$.data.book_id}"
+    },
+    "ruleToc": {
+      "chapterList": "$.data.chapter_list",
+      "chapterName": "$.title",
+      "chapterUrl": "/api/book/chapter?book_id={$.book_id}&item_id={$.item_id}"
+    },
+    "ruleContent": {
+      "content": "$.data.content",
+      "title": "$.data.title"
+    },
+    "ruleReview": {
+      "contractVersion": "fanqie.paragraph-comments.v1",
+      "reviewIndexUrl": "/api/book/paragraph_comments?book_id={{bookId}}&item_id={{itemId}}&detail_limit=0",
+      "reviewUrl": "/api/book/paragraph_comment_page?book_id={{bookId}}&item_id={{itemId}}&para_id={{paraId}}&item_version={{itemVersion}}&count={{pageSize}}&cursor={{cursor}}",
+      "reviewQuoteUrl": "/api/book/paragraph_comment_replies?book_id={{bookId}}&item_id={{itemId}}&comment_id={{commentId}}&count={{pageSize}}&cursor={{cursor}}",
+      "paragraphListRule": "$.data.paragraphs",
+      "paragraphIdRule": "$.para_id",
+      "paragraphCountRule": "$.count",
+      "commentListRule": "$.data.comments",
+      "commentIdRule": "$.comment_id",
+      "userIdRule": "$.user_id",
+      "userNameRule": "$.user_name",
+      "avatarRule": "$.user_avatar",
+      "contentRule": "$.text",
+      "postTimeRule": "$.create_timestamp",
+      "voteUpCountRule": "$.digg_count",
+      "quoteCountRule": "$.reply_count",
+      "hasMoreRule": "$.data.has_more",
+      "nextCursorRule": "$.data.next_cursor",
+      "quoteListRule": "$.data.replies",
+      "quoteIdRule": "$.reply_id",
+      "quoteParentIdRule": "$.reply_to_reply_id",
+      "quoteUserIdRule": "$.user_id",
+      "quoteUserNameRule": "$.user_name",
+      "quoteAvatarRule": "$.user_avatar",
+      "quoteContentRule": "$.text",
+      "quotePostTimeRule": "$.create_timestamp",
+      "quoteVoteUpCountRule": "$.digg_count",
+      "quoteChildrenRule": "$.children"
+    }
+  }
+]
