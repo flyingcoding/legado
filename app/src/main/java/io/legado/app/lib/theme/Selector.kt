@@ -1,5 +1,7 @@
 package io.legado.app.lib.theme
 
+import androidx.core.graphics.drawable.toDrawable
+
 import android.content.Context
 import android.content.res.ColorStateList
 import android.graphics.Color
@@ -281,7 +283,7 @@ object Selector {
         private var hasSetFocusedDrawable = false
 
         init {
-            mDefaultDrawable = ColorDrawable(Color.TRANSPARENT)
+            mDefaultDrawable = Color.TRANSPARENT.toDrawable()
         }
 
         fun setDefaultDrawable(drawable: Drawable?): DrawableSelector {

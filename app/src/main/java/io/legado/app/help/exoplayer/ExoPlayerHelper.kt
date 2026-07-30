@@ -1,5 +1,7 @@
 package io.legado.app.help.exoplayer
 
+import androidx.core.net.toUri
+
 import android.annotation.SuppressLint
 import android.content.Context
 import android.net.Uri
@@ -68,7 +70,7 @@ object ExoPlayerHelper {
             if (it.uri.toString().contains(SPLIT_TAG)) {
                 val urls = it.uri.toString().split(SPLIT_TAG)
                 val url = urls[0]
-                res = res.withUri(Uri.parse(url))
+                res = res.withUri(url.toUri())
                 try {
                     val headers: Map<String, String> = GSON.fromJson(urls[1], mapType)
                     okhttpDataFactory.setDefaultRequestProperties(headers)

@@ -1,5 +1,7 @@
 package io.legado.app.ui.widget.seekbar
 
+import androidx.core.content.withStyledAttributes
+
 import android.annotation.SuppressLint
 import android.content.Context
 import android.graphics.Canvas
@@ -63,12 +65,12 @@ class VerticalSeekBar @JvmOverloads constructor(context: Context, attrs: Attribu
         ViewCompat.setLayoutDirection(this, ViewCompat.LAYOUT_DIRECTION_LTR)
 
         if (attrs != null) {
-            val a = context.obtainStyledAttributes(attrs, R.styleable.VerticalSeekBar)
-            val rotationAngle = a.getInteger(R.styleable.VerticalSeekBar_seekBarRotation, 0)
-            if (isValidRotationAngle(rotationAngle)) {
-                mRotationAngle = rotationAngle
+            context.withStyledAttributes(attrs, R.styleable.VerticalSeekBar) {
+                val rotationAngle = getInteger(R.styleable.VerticalSeekBar_seekBarRotation, 0)
+                if (isValidRotationAngle(rotationAngle)) {
+                    mRotationAngle = rotationAngle
+                }
             }
-            a.recycle()
         }
     }
 

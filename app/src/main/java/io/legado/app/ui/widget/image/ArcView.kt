@@ -1,9 +1,11 @@
 package io.legado.app.ui.widget.image
 
+import android.annotation.SuppressLint
 import android.content.Context
 import android.graphics.*
 import android.util.AttributeSet
 import android.view.View
+import androidx.core.graphics.toColorInt
 import io.legado.app.R
 
 /**
@@ -29,11 +31,13 @@ class ArcView @JvmOverloads constructor(
     val path = Path()
 
     init {
+        // KTX 闭包无法初始化只读属性，保留显式回收以维持初始化语义。
+        @SuppressLint("UseKtx")
         val typedArray = context.obtainStyledAttributes(attrs, R.styleable.ArcView)
         mArcHeight = typedArray.getDimensionPixelSize(R.styleable.ArcView_arcHeight, 0)
         mBgColor = typedArray.getColor(
             R.styleable.ArcView_bgColor,
-            Color.parseColor("#303F9F")
+            "#303F9F".toColorInt()
         )
         mDirectionTop = typedArray.getBoolean(R.styleable.ArcView_arcDirectionTop, false)
         typedArray.recycle()

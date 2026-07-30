@@ -3,6 +3,7 @@ package me.ag2s.epublib.util;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Locale;
 
 /**
  * Various String utility functions.
@@ -108,7 +109,7 @@ public class StringUtil {
             return false;
         }
         return source.substring(source.length() - suffix.length())
-                .toLowerCase().endsWith(suffix.toLowerCase());
+                .toLowerCase(Locale.ROOT).endsWith(suffix.toLowerCase(Locale.ROOT));
     }
 
     public static boolean startsWithIgnoreCase(String source, String prefix) {
@@ -122,7 +123,7 @@ public class StringUtil {
             return false;
         }
         return source.substring(0, prefix.length())
-                .toLowerCase().startsWith(prefix.toLowerCase());
+                .toLowerCase(Locale.ROOT).startsWith(prefix.toLowerCase(Locale.ROOT));
     }
 
     /**

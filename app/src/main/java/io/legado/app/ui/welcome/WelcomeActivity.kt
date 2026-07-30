@@ -1,5 +1,6 @@
 package io.legado.app.ui.welcome
 
+import android.annotation.SuppressLint
 import android.content.Intent
 import android.graphics.drawable.BitmapDrawable
 import android.os.Bundle
@@ -46,6 +47,8 @@ open class WelcomeActivity : BaseActivity<ActivityWelcomeBinding>() {
         upNavigationBarColor()
     }
 
+    // BitmapDrawable 允许可空位图，KTX 扩展不具备相同的空值语义。
+    @SuppressLint("UseKtx")
     override fun upBackgroundImage() {
         if (getPrefBoolean(PreferKey.customWelcome)) {
             kotlin.runCatching {

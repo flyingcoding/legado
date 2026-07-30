@@ -1,6 +1,9 @@
 //Copyright (c) 2017. 章钦豪. All rights reserved.
 package io.legado.app.utils
 
+import androidx.core.graphics.createBitmap
+import androidx.core.graphics.drawable.toDrawable
+
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.graphics.Canvas
@@ -613,7 +616,7 @@ class ACache private constructor(cacheDir: File, max_size: Long, max_count: Int)
             else
                 Bitmap.Config.RGB_565
             // 建立对应 bitmap
-            val bitmap = Bitmap.createBitmap(w, h, config)
+            val bitmap = createBitmap(w, h, config)
             // 建立对应 bitmap 的画布
             val canvas = Canvas(bitmap)
             drawable.setBounds(0, 0, w, h)
@@ -628,7 +631,7 @@ class ACache private constructor(cacheDir: File, max_size: Long, max_count: Int)
         fun bitmap2Drawable(bm: Bitmap?): Drawable? {
             return if (bm == null) {
                 null
-            } else BitmapDrawable(appCtx.resources, bm)
+            } else bm.toDrawable(appCtx.resources)
         }
     }
 

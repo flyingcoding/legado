@@ -95,10 +95,10 @@ object CookieStore : CookieManagerInterface {
             if (pairs.size <= 1) {
                 continue
             }
-            val key = pairs[0].trim { it <= ' ' }
+            val key = pairs[0].trim()
             val value = pairs[1]
-            if (value.isNotBlank() || value.trim { it <= ' ' } == "null") {
-                cookieMap[key] = value.trim { it <= ' ' }
+            if (value.isNotBlank() || value.trim() == "null") {
+                cookieMap[key] = value.trim()
             }
         }
         return cookieMap

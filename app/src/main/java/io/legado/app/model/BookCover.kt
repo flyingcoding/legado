@@ -59,7 +59,8 @@ object BookCover {
         upDefaultCover()
     }
 
-    @SuppressLint("UseCompatLoadingForDrawables")
+    // BitmapDrawable 允许可空位图，KTX 扩展不具备相同的空值语义。
+    @SuppressLint("UseCompatLoadingForDrawables", "UseKtx")
     fun upDefaultCover() {
         val isNightTheme = AppConfig.isNightTheme
         drawBookName = if (isNightTheme) {

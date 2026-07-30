@@ -1,5 +1,7 @@
 package io.legado.app.utils
 
+import androidx.core.net.toUri
+
 import android.annotation.SuppressLint
 import android.app.Activity
 import android.content.Intent
@@ -24,7 +26,7 @@ object SystemUtils {
             try {
                 @SuppressLint("BatteryLife")
                 val intent = Intent(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS)
-                intent.data = Uri.parse("package:" + activity.packageName)
+                intent.data = ("package:" + activity.packageName).toUri()
                 activity.startActivity(intent)
             } catch (ignored: Throwable) {
             }

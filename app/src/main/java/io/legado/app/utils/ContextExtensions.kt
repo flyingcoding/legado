@@ -2,6 +2,8 @@
 
 package io.legado.app.utils
 
+import androidx.core.net.toUri
+
 import android.annotation.SuppressLint
 import android.app.Activity
 import android.app.PendingIntent
@@ -323,7 +325,7 @@ fun Context.getClipText(): String? {
 fun Context.sendMail(mail: String) {
     try {
         val intent = Intent(Intent.ACTION_SENDTO)
-        intent.data = Uri.parse("mailto:$mail")
+        intent.data = "mailto:$mail".toUri()
         intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
         startActivity(intent)
     } catch (e: Exception) {

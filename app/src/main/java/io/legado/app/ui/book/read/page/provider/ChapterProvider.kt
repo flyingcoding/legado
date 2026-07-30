@@ -1,5 +1,7 @@
 package io.legado.app.ui.book.read.page.provider
 
+import androidx.core.net.toUri
+
 import android.graphics.Paint.FontMetrics
 import android.graphics.RectF
 import android.graphics.Typeface
@@ -910,14 +912,14 @@ object ChapterProvider {
             when {
                 fontPath.isContentScheme() && Build.VERSION.SDK_INT >= Build.VERSION_CODES.O -> {
                     appCtx.contentResolver
-                        .openFileDescriptor(Uri.parse(fontPath), "r")!!
+                        .openFileDescriptor(fontPath.toUri(), "r")!!
                         .use {
                             Typeface.Builder(it.fileDescriptor).build()
                         }
                 }
 
                 fontPath.isContentScheme() -> {
-                    Typeface.createFromFile(RealPathUtil.getPath(appCtx, Uri.parse(fontPath)))
+                    Typeface.createFromFile(RealPathUtil.getPath(appCtx, fontPath.toUri()))
                 }
 
                 fontPath.isNotEmpty() -> Typeface.createFromFile(fontPath)

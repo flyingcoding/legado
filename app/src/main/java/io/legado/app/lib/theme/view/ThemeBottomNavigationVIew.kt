@@ -1,5 +1,7 @@
 package io.legado.app.lib.theme.view
 
+import androidx.core.graphics.drawable.toDrawable
+
 import android.content.Context
 import android.graphics.Color
 import android.graphics.drawable.ColorDrawable
@@ -33,7 +35,7 @@ class ThemeBottomNavigationVIew(context: Context, attrs: AttributeSet) :
 
         if (AppConfig.isEInkMode) {
             isItemHorizontalTranslationEnabled = false
-            itemBackground = ColorDrawable(Color.TRANSPARENT)
+            itemBackground = Color.TRANSPARENT.toDrawable()
         }
 
         ViewCompat.setOnApplyWindowInsetsListener(this, null)

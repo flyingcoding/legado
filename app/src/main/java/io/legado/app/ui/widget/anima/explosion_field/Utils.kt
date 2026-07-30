@@ -15,6 +15,8 @@
  */
 package io.legado.app.ui.widget.anima.explosion_field
 
+import androidx.core.graphics.createBitmap
+
 
 import android.content.res.Resources
 import android.graphics.Bitmap
@@ -66,7 +68,7 @@ object Utils {
         retryCount: Int
     ): Bitmap? {
         try {
-            return Bitmap.createBitmap(width, height, config)
+            return createBitmap(width, height, config)
         } catch (e: OutOfMemoryError) {
             e.printOnDebug()
             if (retryCount > 0) {

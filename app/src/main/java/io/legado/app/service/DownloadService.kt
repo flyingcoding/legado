@@ -1,5 +1,7 @@
 package io.legado.app.service
 
+import androidx.core.net.toUri
+
 import android.annotation.SuppressLint
 import android.app.DownloadManager
 import android.content.BroadcastReceiver
@@ -100,7 +102,7 @@ class DownloadService : BaseService() {
         }
         kotlin.runCatching {
             // 指定下载地址
-            val request = DownloadManager.Request(Uri.parse(url))
+            val request = DownloadManager.Request(url.toUri())
             // 设置通知
             request.setNotificationVisibility(DownloadManager.Request.VISIBILITY_HIDDEN)
             // 设置下载文件保存的路径和文件名

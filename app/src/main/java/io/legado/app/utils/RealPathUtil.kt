@@ -1,5 +1,7 @@
 package io.legado.app.utils
 
+import androidx.core.net.toUri
+
 import android.annotation.SuppressLint
 import android.content.ContentUris
 import android.content.Context
@@ -41,7 +43,7 @@ object RealPathUtil {
             } else if (isDownloadsDocument(uri)) {
                 val id = DocumentsContract.getDocumentId(uri)
                 val contentUri = ContentUris.withAppendedId(
-                    Uri.parse("content://downloads/public_downloads"),
+                    "content://downloads/public_downloads".toUri(),
                     java.lang.Long.valueOf(id)
                 )
                 //return getDataColumn(context, uri, null, null);

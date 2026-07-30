@@ -2,6 +2,8 @@
 
 package io.legado.app.utils
 
+import androidx.core.graphics.get
+
 import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.Bitmap.Config
@@ -249,10 +251,7 @@ fun Bitmap.getMeanColor(): Int {
     var pixelSumGreen = 0
     for (i in 0..99) {
         for (j in 70..99) {
-            pixel = this.getPixel(
-                (i * width / 100.toFloat()).roundToInt(),
-                (j * height / 100.toFloat()).roundToInt()
-            )
+            pixel = this[(i * width / 100.toFloat()).roundToInt(), (j * height / 100.toFloat()).roundToInt()]
             pixelSumRed += Color.red(pixel)
             pixelSumGreen += Color.green(pixel)
             pixelSumBlue += Color.blue(pixel)

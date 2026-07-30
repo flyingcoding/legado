@@ -1,5 +1,6 @@
 package io.legado.app.ui.widget.text
 
+import android.annotation.SuppressLint
 import android.content.Context
 import android.util.AttributeSet
 import androidx.appcompat.widget.AppCompatTextView
@@ -17,6 +18,8 @@ open class StrokeTextView(context: Context, attrs: AttributeSet?) :
     private val isBottomBackground: Boolean
 
     init {
+        // KTX 闭包无法初始化只读属性，保留显式回收以维持初始化语义。
+        @SuppressLint("UseKtx")
         val typedArray = context.obtainStyledAttributes(attrs, R.styleable.StrokeTextView)
         radius = typedArray.getDimensionPixelOffset(R.styleable.StrokeTextView_radius, radius)
         isBottomBackground =

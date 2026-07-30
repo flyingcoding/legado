@@ -1,5 +1,7 @@
 package io.legado.app.lib.permission
 
+import androidx.core.net.toUri
+
 import android.annotation.SuppressLint
 import android.content.Intent
 import android.content.pm.PackageManager
@@ -69,7 +71,7 @@ class PermissionActivity : AppCompatActivity() {
                         val settingIntent =
                             Intent(
                                 Settings.ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION,
-                                Uri.parse("package:$packageName")
+                                "package:$packageName".toUri()
                             )
                         settingActivityResult.launch(settingIntent)
                     } else {
@@ -113,7 +115,7 @@ class PermissionActivity : AppCompatActivity() {
                 lifecycleScope.launch {
                     try {
                         val intent = Intent(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS)
-                        intent.setData(Uri.parse("package:$packageName"))
+                        intent.setData("package:$packageName".toUri())
                         val className =
                             "com.android.settings.fuelgauge.RequestIgnoreBatteryOptimizations"
                         val activities = packageManager.queryIntentActivities(

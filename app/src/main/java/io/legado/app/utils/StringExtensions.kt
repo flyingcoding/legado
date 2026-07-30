@@ -2,6 +2,8 @@
 
 package io.legado.app.utils
 
+import androidx.core.net.toUri
+
 import android.annotation.SuppressLint
 import android.icu.text.Collator
 import android.icu.util.ULocale
@@ -23,7 +25,7 @@ fun String?.isContentScheme(): Boolean = this?.startsWith("content://") == true
 fun String.toEditable(): Editable = Editable.Factory.getInstance().newEditable(this)
 
 fun String.parseToUri(): Uri {
-    return if (isUri()) Uri.parse(this) else {
+    return if (isUri()) this.toUri() else {
         Uri.fromFile(File(this))
     }
 }

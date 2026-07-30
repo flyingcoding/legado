@@ -1,5 +1,8 @@
 package io.legado.app.help.config
 
+import androidx.core.graphics.drawable.toDrawable
+
+import android.annotation.SuppressLint
 import android.graphics.Color
 import android.graphics.drawable.BitmapDrawable
 import android.graphics.drawable.ColorDrawable
@@ -596,9 +599,9 @@ object ReadBookConfig {
         private var initColorInt = false
 
         private fun initColorInt() {
-            textColorIntEInk = Color.parseColor(textColorEInk)
-            textColorIntNight = Color.parseColor(textColorNight)
-            textColorInt = Color.parseColor(textColor)
+            textColorIntEInk = textColorEInk.toColorInt()
+            textColorIntNight = textColorNight.toColorInt()
+            textColorInt = textColor.toColorInt()
             initColorInt = true
         }
 
@@ -697,15 +700,17 @@ object ReadBookConfig {
             }
         }
 
+        // BitmapDrawable 允许可空位图，KTX 扩展不具备相同的空值语义。
+        @SuppressLint("UseKtx")
         fun curBgDrawable(width: Int, height: Int): Drawable {
             if (width == 0 || height == 0) {
-                return ColorDrawable(appCtx.getCompatColor(R.color.background))
+                return appCtx.getCompatColor(R.color.background).toDrawable()
             }
             var bgDrawable: Drawable? = null
             val resources = appCtx.resources
             try {
                 bgDrawable = when (curBgType()) {
-                    0 -> ColorDrawable(Color.parseColor(curBgStr()))
+                    0 -> curBgStr().toColorInt().toDrawable()
                     1 -> {
                         val path = "bg" + File.separator + curBgStr()
                         val bitmap = BitmapUtils.decodeAssetsBitmap(appCtx, path, width, height)
@@ -726,7 +731,7 @@ object ReadBookConfig {
             } catch (e: Exception) {
                 e.printOnDebug()
             }
-            return bgDrawable ?: ColorDrawable(appCtx.getCompatColor(R.color.background))
+            return bgDrawable ?: appCtx.getCompatColor(R.color.background).toDrawable()
         }
 
         fun getBgPath(bgIndex: Int): String? {

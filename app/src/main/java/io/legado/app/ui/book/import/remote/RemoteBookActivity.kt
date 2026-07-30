@@ -8,6 +8,7 @@ import android.view.MenuItem
 import android.view.SubMenu
 import androidx.activity.addCallback
 import androidx.activity.viewModels
+import androidx.core.net.toUri
 import androidx.core.view.isGone
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -231,8 +232,8 @@ class RemoteBookActivity : BaseImportBookActivity<RemoteBookViewModel>(),
                 startReadBook(it)
             }
         } else {
-            AppConfig.defaultBookTreeUri ?: return
-            val downloadArchiveFileDoc = FileDoc.fromUri(Uri.parse(AppConfig.defaultBookTreeUri), true)
+            val defaultBookTreeUri = AppConfig.defaultBookTreeUri ?: return
+            val downloadArchiveFileDoc = FileDoc.fromUri(defaultBookTreeUri.toUri(), true)
                 .find(downloadFileName)
             if (downloadArchiveFileDoc == null) {
                 showRemoteBookDownloadAlert(remoteBook) {

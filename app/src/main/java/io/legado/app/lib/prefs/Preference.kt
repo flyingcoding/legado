@@ -1,5 +1,6 @@
 package io.legado.app.lib.prefs
 
+import android.annotation.SuppressLint
 import android.content.Context
 import android.graphics.drawable.Drawable
 import android.util.AttributeSet
@@ -28,6 +29,8 @@ open class Preference(context: Context, attrs: AttributeSet) :
 
     init {
         layoutResource = R.layout.view_preference
+        // KTX 闭包无法初始化只读属性，保留显式回收以维持初始化语义。
+        @SuppressLint("UseKtx")
         val typedArray = context.obtainStyledAttributes(attrs, R.styleable.Preference)
         isBottomBackground = typedArray.getBoolean(R.styleable.Preference_isBottomBackground, false)
         typedArray.recycle()

@@ -1,5 +1,6 @@
 package io.legado.app.ui.widget
 
+import android.annotation.SuppressLint
 import android.content.Context
 import android.graphics.PorterDuff
 import android.util.AttributeSet
@@ -40,6 +41,8 @@ class DetailSeekBar @JvmOverloads constructor(
         }
 
     init {
+        // KTX 闭包无法初始化只读属性，保留显式回收以维持初始化语义。
+        @SuppressLint("UseKtx")
         val typedArray = context.obtainStyledAttributes(attrs, R.styleable.DetailSeekBar)
         isBottomBackground =
             typedArray.getBoolean(R.styleable.DetailSeekBar_isBottomBackground, false)

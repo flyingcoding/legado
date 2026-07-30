@@ -1,5 +1,6 @@
 package io.legado.app.ui.widget
 
+import android.annotation.SuppressLint
 import android.content.Context
 import android.content.res.ColorStateList
 import android.graphics.PorterDuff
@@ -60,6 +61,8 @@ class TitleBar @JvmOverloads constructor(
     private val attachToActivity: Boolean
 
     init {
+        // KTX 闭包无法初始化多项只读属性，保留显式回收以维持初始化顺序。
+        @SuppressLint("UseKtx")
         val a = context.obtainStyledAttributes(
             attrs, R.styleable.TitleBar,
             R.attr.titleBarStyle, 0

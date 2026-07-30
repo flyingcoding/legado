@@ -1,5 +1,7 @@
 package io.legado.app.model.remote
 
+import androidx.core.net.toUri
+
 import android.net.Uri
 import io.legado.app.constant.AppPattern.archiveFileRegex
 import io.legado.app.constant.AppPattern.bookFileRegex
@@ -68,7 +70,7 @@ class RemoteBookWebDav(
 
     override suspend fun upload(book: Book) {
         if (!NetworkUtils.isAvailable()) throw NoStackTraceException("网络不可用")
-        val localBookUri = Uri.parse(book.bookUrl)
+        val localBookUri = book.bookUrl.toUri()
         val putUrl = "$rootBookUrl${book.originName}"
         val webDav = WebDav(putUrl, authorization)
         if (localBookUri.isContentScheme()) {

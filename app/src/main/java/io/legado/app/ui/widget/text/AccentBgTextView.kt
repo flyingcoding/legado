@@ -1,5 +1,7 @@
 package io.legado.app.ui.widget.text
 
+import androidx.core.content.withStyledAttributes
+
 import android.content.Context
 import android.graphics.Color
 import android.util.AttributeSet
@@ -19,9 +21,9 @@ class AccentBgTextView @JvmOverloads constructor(
     private var radius = 0
 
     init {
-        val typedArray = context.obtainStyledAttributes(attrs, R.styleable.AccentBgTextView)
-        radius = typedArray.getDimensionPixelOffset(R.styleable.AccentBgTextView_radius, radius)
-        typedArray.recycle()
+        context.withStyledAttributes(attrs, R.styleable.AccentBgTextView) {
+            radius = getDimensionPixelOffset(R.styleable.AccentBgTextView_radius, radius)
+        }
         upBackground()
     }
 

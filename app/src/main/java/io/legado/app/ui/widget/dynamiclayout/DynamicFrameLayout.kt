@@ -1,5 +1,7 @@
 package io.legado.app.ui.widget.dynamiclayout
 
+import androidx.core.content.withStyledAttributes
+
 import android.content.Context
 import android.graphics.drawable.Drawable
 import android.util.AttributeSet
@@ -43,18 +45,18 @@ class DynamicFrameLayout @JvmOverloads constructor(
     init {
         View.inflate(context, R.layout.view_dynamic, this)
 
-        val a = context.obtainStyledAttributes(attrs, R.styleable.DynamicFrameLayout)
-        errorIcon = a.getDrawable(R.styleable.DynamicFrameLayout_errorSrc)
-        emptyIcon = a.getDrawable(R.styleable.DynamicFrameLayout_emptySrc)
+        context.withStyledAttributes(attrs, R.styleable.DynamicFrameLayout) {
+            errorIcon = getDrawable(R.styleable.DynamicFrameLayout_errorSrc)
+            emptyIcon = getDrawable(R.styleable.DynamicFrameLayout_emptySrc)
 
-        emptyActionDescription = a.getText(R.styleable.DynamicFrameLayout_emptyActionDescription)
-        emptyDescription = a.getText(R.styleable.DynamicFrameLayout_emptyDescription)
+            emptyActionDescription = getText(R.styleable.DynamicFrameLayout_emptyActionDescription)
+            emptyDescription = getText(R.styleable.DynamicFrameLayout_emptyDescription)
 
-        errorActionDescription = a.getText(R.styleable.DynamicFrameLayout_errorActionDescription)
-        if (errorActionDescription == null) {
-            errorActionDescription = context.getString(R.string.dynamic_click_retry)
+            errorActionDescription = getText(R.styleable.DynamicFrameLayout_errorActionDescription)
+            if (errorActionDescription == null) {
+                errorActionDescription = context.getString(R.string.dynamic_click_retry)
+            }
         }
-        a.recycle()
     }
 
     override fun onFinishInflate() {

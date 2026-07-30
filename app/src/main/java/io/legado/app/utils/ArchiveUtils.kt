@@ -1,5 +1,7 @@
 package io.legado.app.utils
 
+import androidx.core.net.toUri
+
 import android.net.Uri
 import androidx.documentfile.provider.DocumentFile
 import io.legado.app.constant.AppPattern.archiveFileRegex
@@ -31,7 +33,7 @@ object ArchiveUtils {
         path: String = TEMP_PATH,
         filter: ((String) -> Boolean)? = null
     ): List<File> {
-        return deCompress(Uri.parse(archivePath), path, filter)
+        return deCompress(archivePath.toUri(), path, filter)
     }
 
     fun deCompress(
@@ -104,7 +106,7 @@ object ArchiveUtils {
         archiveName: String,
         workPath: String
     ): FileDoc {
-        return FileDoc.fromUri(Uri.parse(workPath), true)
+        return FileDoc.fromUri(workPath.toUri(), true)
             .createFolderIfNotExist(MD5Utils.md5Encode16(archiveName))
     }
 }

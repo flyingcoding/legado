@@ -41,8 +41,7 @@ class IconListPreference(context: Context, attrs: AttributeSet) : ListPreference
         }
 
         for (iconName in iconNames) {
-            val resId = context.resources
-                .getIdentifier(iconName.toString(), "mipmap", context.packageName)
+            val resId = getIconResourceId(iconName)
             var d: Drawable? = null
             kotlin.runCatching {
                 d = context.getCompatDrawable(resId)
@@ -170,8 +169,7 @@ class IconListPreference(context: Context, attrs: AttributeSet) : ListPreference
                         label.text = it[index]
                     }
                     dialogIconNames?.let {
-                        val resId = context.resources
-                            .getIdentifier(it[index].toString(), "mipmap", context.packageName)
+                        val resId = getIconResourceId(it[index])
                         val d = try {
                             context.getCompatDrawable(resId)
                         } catch (e: Exception) {
@@ -209,6 +207,25 @@ class IconListPreference(context: Context, attrs: AttributeSet) : ListPreference
                     }
                 }
                 return -1
+            }
+        }
+    }
+
+    private companion object {
+
+        /**
+         * 将配置中的启动图标名称映射为编译期可校验的资源标识。
+         */
+        fun getIconResourceId(iconName: CharSequence): Int {
+            return when (iconName.toString()) {
+                "ic_launcher" -> R.mipmap.ic_launcher
+                "launcher1" -> R.mipmap.launcher1
+                "launcher2" -> R.mipmap.launcher2
+                "launcher3" -> R.mipmap.launcher3
+                "launcher4" -> R.mipmap.launcher4
+                "launcher5" -> R.mipmap.launcher5
+                "launcher6" -> R.mipmap.launcher6
+                else -> 0
             }
         }
     }

@@ -1,5 +1,8 @@
 package io.legado.app.ui.widget.image
 
+import androidx.core.content.withStyledAttributes
+import androidx.core.graphics.createBitmap
+
 import android.annotation.SuppressLint
 import android.content.Context
 import android.graphics.*
@@ -121,30 +124,30 @@ class CircleImageView @JvmOverloads constructor(
     var isInView = false
 
     init {
-        val a = context.obtainStyledAttributes(attrs, R.styleable.CircleImageView)
-        mBorderWidth =
-            a.getDimensionPixelSize(
-                R.styleable.CircleImageView_civ_border_width,
-                DEFAULT_BORDER_WIDTH
-            )
-        mBorderColor =
-            a.getColor(R.styleable.CircleImageView_civ_border_color, DEFAULT_BORDER_COLOR)
-        mBorderOverlay =
-            a.getBoolean(R.styleable.CircleImageView_civ_border_overlay, DEFAULT_BORDER_OVERLAY)
-        mCircleBackgroundColor =
-            a.getColor(
-                R.styleable.CircleImageView_civ_circle_background_color,
-                DEFAULT_CIRCLE_BACKGROUND_COLOR
-            )
-        text = a.getString(R.styleable.CircleImageView_text)
-        contentDescription = text
-        if (a.hasValue(R.styleable.CircleImageView_textColor)) {
-            textColor = a.getColor(
-                R.styleable.CircleImageView_textColor,
-                context.getCompatColor(R.color.primaryText)
-            )
+        context.withStyledAttributes(attrs, R.styleable.CircleImageView) {
+            mBorderWidth =
+                getDimensionPixelSize(
+                    R.styleable.CircleImageView_civ_border_width,
+                    DEFAULT_BORDER_WIDTH
+                )
+            mBorderColor =
+                getColor(R.styleable.CircleImageView_civ_border_color, DEFAULT_BORDER_COLOR)
+            mBorderOverlay =
+                getBoolean(R.styleable.CircleImageView_civ_border_overlay, DEFAULT_BORDER_OVERLAY)
+            mCircleBackgroundColor =
+                getColor(
+                    R.styleable.CircleImageView_civ_circle_background_color,
+                    DEFAULT_CIRCLE_BACKGROUND_COLOR
+                )
+            text = getString(R.styleable.CircleImageView_text)
+            contentDescription = text
+            if (hasValue(R.styleable.CircleImageView_textColor)) {
+                textColor = getColor(
+                    R.styleable.CircleImageView_textColor,
+                    context.getCompatColor(R.color.primaryText)
+                )
+            }
         }
-        a.recycle()
 
         mReady = true
 
@@ -293,17 +296,9 @@ class CircleImageView @JvmOverloads constructor(
 
         return try {
             val bitmap: Bitmap = if (drawable is ColorDrawable) {
-                Bitmap.createBitmap(
-                    COLOR_DRAWABLE_DIMENSION,
-                    COLOR_DRAWABLE_DIMENSION,
-                    BITMAP_CONFIG
-                )
+                createBitmap(COLOR_DRAWABLE_DIMENSION, COLOR_DRAWABLE_DIMENSION, BITMAP_CONFIG)
             } else {
-                Bitmap.createBitmap(
-                    drawable.intrinsicWidth,
-                    drawable.intrinsicHeight,
-                    BITMAP_CONFIG
-                )
+                createBitmap(drawable.intrinsicWidth, drawable.intrinsicHeight, BITMAP_CONFIG)
             }
 
             val canvas = Canvas(bitmap)

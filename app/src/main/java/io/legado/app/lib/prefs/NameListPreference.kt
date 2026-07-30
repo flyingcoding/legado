@@ -1,5 +1,6 @@
 package io.legado.app.lib.prefs
 
+import android.annotation.SuppressLint
 import android.content.Context
 import android.util.AttributeSet
 import android.widget.TextView
@@ -18,6 +19,8 @@ class NameListPreference(context: Context, attrs: AttributeSet) : ListPreference
     init {
         layoutResource = R.layout.view_preference
         widgetLayoutResource = R.layout.item_fillet_text
+        // KTX 闭包无法初始化只读属性，保留显式回收以维持初始化语义。
+        @SuppressLint("UseKtx")
         val typedArray = context.obtainStyledAttributes(attrs, R.styleable.Preference)
         isBottomBackground = typedArray.getBoolean(R.styleable.Preference_isBottomBackground, false)
         typedArray.recycle()

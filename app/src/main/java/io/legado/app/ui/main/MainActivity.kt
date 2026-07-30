@@ -2,6 +2,9 @@
 
 package io.legado.app.ui.main
 
+import androidx.core.view.get
+
+import android.content.Intent
 import android.os.Bundle
 import android.text.format.DateUtils
 import android.view.MenuItem
@@ -17,6 +20,7 @@ import androidx.viewpager.widget.ViewPager
 import com.google.android.material.bottomnavigation.BottomNavigationView
 import io.legado.app.BuildConfig
 import io.legado.app.R
+import io.legado.app.api.ShortCuts
 import io.legado.app.base.VMBaseActivity
 import io.legado.app.constant.AppConst.appInfo
 import io.legado.app.constant.EventBus
@@ -87,6 +91,7 @@ class MainActivity : VMBaseActivity<ActivityMainBinding, MainViewModel>(),
     }
 
     override fun onActivityCreated(savedInstanceState: Bundle?) {
+        ShortCuts.reportUsage(this, intent)
         upBottomMenu()
         initView()
         upHomePage()
@@ -111,6 +116,14 @@ class MainActivity : VMBaseActivity<ActivityMainBinding, MainViewModel>(),
                 }
             }
         }
+    }
+
+    /**
+     * 处理复用主页实例时送达的桌面快捷方式入口。
+     */
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        ShortCuts.reportUsage(this, intent)
     }
 
     override fun onPostCreate(savedInstanceState: Bundle?) {
@@ -400,8 +413,7 @@ class MainActivity : VMBaseActivity<ActivityMainBinding, MainViewModel>(),
 
         override fun onPageSelected(position: Int) {
             pagePosition = position
-            binding.bottomNavigationView.menu
-                .getItem(realPositions[position]).isChecked = true
+            binding.bottomNavigationView.menu[realPositions[position]].isChecked = true
         }
 
     }

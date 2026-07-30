@@ -1,5 +1,7 @@
 package io.legado.app.base.adapter
 
+import androidx.core.util.size
+
 import android.annotation.SuppressLint
 import android.content.Context
 import android.util.SparseArray
@@ -54,8 +56,8 @@ abstract class RecyclerAdapter<ITEM, VB : ViewBinding>(protected val context: Co
     @Synchronized
     fun addHeaderView(header: ((parent: ViewGroup) -> ViewBinding)) {
         kotlin.runCatching {
-            val index = headerItems.size()
-            headerItems.put(TYPE_HEADER_VIEW + headerItems.size(), header)
+            val index = headerItems.size
+            headerItems.put(TYPE_HEADER_VIEW + headerItems.size, header)
             notifyItemInserted(index)
         }
     }
@@ -63,8 +65,8 @@ abstract class RecyclerAdapter<ITEM, VB : ViewBinding>(protected val context: Co
     @Synchronized
     fun addFooterView(footer: ((parent: ViewGroup) -> ViewBinding)) {
         kotlin.runCatching {
-            val index = getActualItemCount() + footerItems.size()
-            footerItems.put(TYPE_FOOTER_VIEW + footerItems.size(), footer)
+            val index = getActualItemCount() + footerItems.size
+            footerItems.put(TYPE_FOOTER_VIEW + footerItems.size, footer)
             notifyItemInserted(index)
         }
     }
@@ -329,10 +331,10 @@ abstract class RecyclerAdapter<ITEM, VB : ViewBinding>(protected val context: Co
     fun getActualItemCount() = items.size
 
 
-    fun getHeaderCount() = headerItems.size()
+    fun getHeaderCount() = headerItems.size
 
 
-    fun getFooterCount() = footerItems.size()
+    fun getFooterCount() = footerItems.size
 
     fun getItem(position: Int): ITEM? = items.getOrNull(position)
 
@@ -480,7 +482,5 @@ abstract class RecyclerAdapter<ITEM, VB : ViewBinding>(protected val context: Co
     }
 
 }
-
-
 
 

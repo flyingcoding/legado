@@ -1,5 +1,7 @@
 package io.legado.app.ui.association
 
+import androidx.core.net.toUri
+
 import android.app.Application
 import android.net.Uri
 import androidx.lifecycle.MutableLiveData
@@ -164,7 +166,7 @@ class ImportBookSourceViewModel(app: Application) : BaseViewModel(app) {
                 }
 
                 mText.isUri() -> {
-                    val uri = Uri.parse(mText)
+                    val uri = mText.toUri()
                     uri.inputStream(context).getOrThrow().use { inputS ->
                         GSON.fromJsonArray<BookSource>(inputS).getOrThrow().let {
                             val source = it.firstOrNull() ?: return@let

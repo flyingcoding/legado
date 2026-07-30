@@ -1,5 +1,7 @@
 package io.legado.app.ui.browser
 
+import androidx.core.net.toUri
+
 import android.annotation.SuppressLint
 import android.content.pm.ActivityInfo
 import android.net.Uri
@@ -280,7 +282,7 @@ class WebViewActivity : VMBaseActivity<ActivityWebViewBinding, WebViewModel>() {
         @Suppress("DEPRECATION", "OVERRIDE_DEPRECATION", "KotlinRedundantDiagnosticSuppress")
         override fun shouldOverrideUrlLoading(view: WebView?, url: String?): Boolean {
             url?.let {
-                return shouldOverrideUrlLoading(Uri.parse(it))
+                return shouldOverrideUrlLoading(it.toUri())
             }
             return true
         }

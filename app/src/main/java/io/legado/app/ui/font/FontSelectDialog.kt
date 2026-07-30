@@ -1,5 +1,7 @@
 package io.legado.app.ui.font
 
+import androidx.core.net.toUri
+
 import android.net.Uri
 import android.os.Bundle
 import android.view.MenuItem
@@ -90,7 +92,7 @@ class FontSelectDialog : BaseDialogFragment(R.layout.dialog_font_select),
             openFolder()
         } else {
             if (fontPath.isContentScheme()) {
-                val doc = DocumentFile.fromTreeUri(requireContext(), Uri.parse(fontPath))
+                val doc = DocumentFile.fromTreeUri(requireContext(), fontPath.toUri())
                 if (doc?.canRead() == true) {
                     loadFontFiles(FileDoc.fromDocumentFile(doc))
                 } else {

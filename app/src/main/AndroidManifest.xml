@@ -199,50 +199,68 @@
             android:name=".ui.book.search.SearchActivity"
             android:launchMode="standard" />
         <!-- 关于界面 -->
+        <!-- 需继承下层页面方向；unspecified 无法保持该语义。 -->
         <activity
             android:name=".ui.about.AboutActivity"
             android:launchMode="singleTask"
-            android:screenOrientation="behind" />
+            android:screenOrientation="behind"
+            tools:ignore="DiscouragedApi" />
         <!-- 书源管理 -->
+        <!-- 需继承下层页面方向；unspecified 无法保持该语义。 -->
         <activity
             android:name=".ui.book.source.manage.BookSourceActivity"
             android:launchMode="singleTop"
-            android:screenOrientation="behind" />
+            android:screenOrientation="behind"
+            tools:ignore="DiscouragedApi" />
         <!-- 订阅源管理 -->
+        <!-- 需继承下层页面方向；unspecified 无法保持该语义。 -->
         <activity
             android:name=".ui.rss.source.manage.RssSourceActivity"
             android:launchMode="singleTop"
-            android:screenOrientation="behind" />
+            android:screenOrientation="behind"
+            tools:ignore="DiscouragedApi" />
         <!-- txt目录规则管理 -->
+        <!-- 需继承下层页面方向；unspecified 无法保持该语义。 -->
         <activity
             android:name=".ui.book.toc.rule.TxtTocRuleActivity"
             android:launchMode="singleTop"
-            android:screenOrientation="behind" />
+            android:screenOrientation="behind"
+            tools:ignore="DiscouragedApi" />
         <!-- 替换规则界面 -->
+        <!-- 需继承下层页面方向；unspecified 无法保持该语义。 -->
         <activity
             android:name=".ui.replace.ReplaceRuleActivity"
             android:launchMode="singleTop"
-            android:screenOrientation="behind" />
+            android:screenOrientation="behind"
+            tools:ignore="DiscouragedApi" />
         <!-- 书籍管理 -->
+        <!-- 需继承下层页面方向；unspecified 无法保持该语义。 -->
         <activity
             android:name=".ui.book.manage.BookshelfManageActivity"
             android:launchMode="singleTop"
-            android:screenOrientation="behind" />
+            android:screenOrientation="behind"
+            tools:ignore="DiscouragedApi" />
         <!-- 书源调试 -->
+        <!-- 需继承下层页面方向；unspecified 无法保持该语义。 -->
         <activity
             android:name=".ui.book.source.debug.BookSourceDebugActivity"
             android:launchMode="singleTop"
-            android:screenOrientation="behind" />
+            android:screenOrientation="behind"
+            tools:ignore="DiscouragedApi" />
         <!-- 目录 -->
+        <!-- 需继承下层页面方向；unspecified 无法保持该语义。 -->
         <activity
             android:name=".ui.book.toc.TocActivity"
             android:launchMode="singleTop"
-            android:screenOrientation="behind" />
+            android:screenOrientation="behind"
+            tools:ignore="DiscouragedApi" />
         <!-- 正文搜索 -->
+        <!-- 需继承下层页面方向；unspecified 无法保持该语义。 -->
         <activity
             android:name=".ui.book.searchContent.SearchContentActivity"
             android:launchMode="singleTop"
-            android:screenOrientation="behind" />
+            android:screenOrientation="behind"
+            tools:ignore="DiscouragedApi" />
         <!-- RSS条目 -->
         <activity
             android:name=".ui.rss.article.RssSortActivity"

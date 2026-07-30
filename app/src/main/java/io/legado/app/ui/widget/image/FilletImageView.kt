@@ -1,5 +1,7 @@
 package io.legado.app.ui.widget.image
 
+import androidx.core.content.withStyledAttributes
+
 import android.annotation.SuppressLint
 import android.content.Context
 import android.graphics.Canvas
@@ -23,42 +25,42 @@ class FilletImageView @JvmOverloads constructor(
 
     init {
         // 读取配置
-        val array = context.obtainStyledAttributes(attrs, R.styleable.FilletImageView)
-        val defaultRadius = 5.dpToPx()
-        val radius =
-            array.getDimensionPixelOffset(R.styleable.FilletImageView_radius, defaultRadius)
-        leftTopRadius = array.getDimensionPixelOffset(
-            R.styleable.FilletImageView_left_top_radius,
-            defaultRadius
-        )
-        rightTopRadius = array.getDimensionPixelOffset(
-            R.styleable.FilletImageView_right_top_radius,
-            defaultRadius
-        )
-        rightBottomRadius =
-            array.getDimensionPixelOffset(
-                R.styleable.FilletImageView_right_bottom_radius,
+        context.withStyledAttributes(attrs, R.styleable.FilletImageView) {
+            val defaultRadius = 5.dpToPx()
+            val radius =
+                getDimensionPixelOffset(R.styleable.FilletImageView_radius, defaultRadius)
+            leftTopRadius = getDimensionPixelOffset(
+                R.styleable.FilletImageView_left_top_radius,
                 defaultRadius
             )
-        leftBottomRadius = array.getDimensionPixelOffset(
-            R.styleable.FilletImageView_left_bottom_radius,
-            defaultRadius
-        )
+            rightTopRadius = getDimensionPixelOffset(
+                R.styleable.FilletImageView_right_top_radius,
+                defaultRadius
+            )
+            rightBottomRadius =
+                getDimensionPixelOffset(
+                    R.styleable.FilletImageView_right_bottom_radius,
+                    defaultRadius
+                )
+            leftBottomRadius = getDimensionPixelOffset(
+                R.styleable.FilletImageView_left_bottom_radius,
+                defaultRadius
+            )
 
-        //如果四个角的值没有设置，那么就使用通用的radius的值。
-        if (defaultRadius == leftTopRadius) {
-            leftTopRadius = radius
+            //如果四个角的值没有设置，那么就使用通用的radius的值。
+            if (defaultRadius == leftTopRadius) {
+                leftTopRadius = radius
+            }
+            if (defaultRadius == rightTopRadius) {
+                rightTopRadius = radius
+            }
+            if (defaultRadius == rightBottomRadius) {
+                rightBottomRadius = radius
+            }
+            if (defaultRadius == leftBottomRadius) {
+                leftBottomRadius = radius
+            }
         }
-        if (defaultRadius == rightTopRadius) {
-            rightTopRadius = radius
-        }
-        if (defaultRadius == rightBottomRadius) {
-            rightBottomRadius = radius
-        }
-        if (defaultRadius == leftBottomRadius) {
-            leftBottomRadius = radius
-        }
-        array.recycle()
     }
 
     override fun onLayout(changed: Boolean, left: Int, top: Int, right: Int, bottom: Int) {

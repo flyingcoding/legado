@@ -1,5 +1,8 @@
 package io.legado.app.utils
 
+import androidx.core.graphics.createBitmap
+import androidx.core.graphics.withSave
+
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.graphics.Canvas
@@ -95,7 +98,7 @@ object QRCodeUtils {
             }
 
             // 生成二维码图片的格式
-            var bitmap: Bitmap? = Bitmap.createBitmap(heightPix, heightPix, Bitmap.Config.ARGB_8888)
+            var bitmap: Bitmap? = createBitmap(heightPix, heightPix)
             bitmap!!.setPixels(pixels, 0, heightPix, 0, 0, heightPix, heightPix)
             if (logo != null) {
                 bitmap = addLogo(bitmap, logo, ratio)
@@ -140,7 +143,7 @@ object QRCodeUtils {
 
         //logo大小为二维码整体大小
         val scaleFactor = srcWidth * ratio / logoWidth
-        var bitmap: Bitmap? = Bitmap.createBitmap(srcWidth, srcHeight, Bitmap.Config.ARGB_8888)
+        var bitmap: Bitmap? = createBitmap(srcWidth, srcHeight)
         try {
             val canvas = Canvas(bitmap!!)
             canvas.drawBitmap(src, 0f, 0f, null)
@@ -156,8 +159,8 @@ object QRCodeUtils {
                 ((srcHeight - logoHeight) / 2).toFloat(),
                 null
             )
-            canvas.save()
-            canvas.restore()
+            canvas.withSave {
+            }
         } catch (e: Exception) {
             bitmap = null
             e.printOnDebug()
@@ -406,10 +409,7 @@ object QRCodeUtils {
                     pixels[offset + x] = if (result[x, y]) codeColor else Color.WHITE
                 }
             }
-            val bitmap = Bitmap.createBitmap(
-                width, height,
-                Bitmap.Config.ARGB_8888
-            )
+            val bitmap = createBitmap(width, height)
             bitmap.setPixels(pixels, 0, width, 0, 0, width, height)
             return if (isShowText) {
                 addCode(bitmap, content, textSize, codeColor, textSize / 2)
@@ -448,11 +448,7 @@ object QRCodeUtils {
         if (srcWidth <= 0 || srcHeight <= 0) {
             return null
         }
-        var bitmap: Bitmap? = Bitmap.createBitmap(
-            srcWidth,
-            srcHeight + textSize + offset * 2,
-            Bitmap.Config.ARGB_8888
-        )
+        var bitmap: Bitmap? = createBitmap(srcWidth, srcHeight + textSize + offset * 2)
         try {
             val canvas = Canvas(bitmap!!)
             canvas.drawBitmap(src, 0f, 0f, null)
@@ -466,8 +462,8 @@ object QRCodeUtils {
                 (srcHeight + textSize / 2 + offset).toFloat(),
                 paint
             )
-            canvas.save()
-            canvas.restore()
+            canvas.withSave {
+            }
         } catch (e: Exception) {
             bitmap = null
             e.printOnDebug()

@@ -34,7 +34,7 @@ fun Element.textArray(): Array<String> {
             }
         }
     }, this)
-    val text = StringUtil.releaseBuilder(sb).trim { it <= ' ' }
+    val text = StringUtil.releaseBuilder(sb).trim()
     return text.splitNotBlank("\n")
 }
 
@@ -75,4 +75,3 @@ private fun preserveWhitespace(node: Node?): Boolean {
 private fun lastCharIsWhitespace(sb: java.lang.StringBuilder): Boolean {
     return sb.isNotEmpty() && sb[sb.length - 1] == ' '
 }
-

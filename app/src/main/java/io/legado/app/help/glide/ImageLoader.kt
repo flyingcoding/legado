@@ -1,5 +1,7 @@
 package io.legado.app.help.glide
 
+import androidx.core.net.toUri
+
 import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.drawable.Drawable
@@ -28,7 +30,7 @@ object ImageLoader {
             path.isNullOrEmpty() -> Glide.with(context).load(path)
             path.isDataUrl() -> Glide.with(context).load(path)
             path.isAbsUrl() -> Glide.with(context).load(path)
-            path.isContentScheme() -> Glide.with(context).load(Uri.parse(path))
+            path.isContentScheme() -> Glide.with(context).load(path.toUri())
             else -> kotlin.runCatching {
                 Glide.with(context).load(File(path))
             }.getOrElse {
@@ -43,7 +45,7 @@ object ImageLoader {
             path.isNullOrEmpty() -> requestManager.load(path)
             path.isDataUrl() -> requestManager.load(path)
             path.isAbsUrl() -> requestManager.load(path)
-            path.isContentScheme() -> requestManager.load(Uri.parse(path))
+            path.isContentScheme() -> requestManager.load(path.toUri())
 
             else -> kotlin.runCatching {
                 requestManager.load(File(path))
@@ -59,7 +61,7 @@ object ImageLoader {
             path.isNullOrEmpty() -> requestManager.load(path)
             path.isDataUrl() -> requestManager.load(path)
             path.isAbsUrl() -> requestManager.load(path)
-            path.isContentScheme() -> requestManager.load(Uri.parse(path))
+            path.isContentScheme() -> requestManager.load(path.toUri())
             else -> kotlin.runCatching {
                 requestManager.load(File(path))
             }.getOrElse {
@@ -72,7 +74,7 @@ object ImageLoader {
         return when {
             path.isNullOrEmpty() -> Glide.with(context).asFile().load(path)
             path.isAbsUrl() -> Glide.with(context).asFile().load(path)
-            path.isContentScheme() -> Glide.with(context).asFile().load(Uri.parse(path))
+            path.isContentScheme() -> Glide.with(context).asFile().load(path.toUri())
             else -> kotlin.runCatching {
                 Glide.with(context).asFile().load(File(path))
             }.getOrElse {

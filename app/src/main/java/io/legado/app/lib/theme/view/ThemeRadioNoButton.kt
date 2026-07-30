@@ -1,5 +1,6 @@
 package io.legado.app.lib.theme.view
 
+import android.annotation.SuppressLint
 import android.content.Context
 import android.graphics.Color
 import android.util.AttributeSet
@@ -20,6 +21,8 @@ class ThemeRadioNoButton(context: Context, attrs: AttributeSet) :
     private val isBottomBackground: Boolean
 
     init {
+        // KTX 闭包无法初始化只读属性，保留显式回收以维持初始化语义。
+        @SuppressLint("UseKtx")
         val typedArray = context.obtainStyledAttributes(attrs, R.styleable.ThemeRadioNoButton)
         isBottomBackground =
             typedArray.getBoolean(R.styleable.ThemeRadioNoButton_isBottomBackground, false)

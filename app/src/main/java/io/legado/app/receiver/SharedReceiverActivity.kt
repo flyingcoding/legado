@@ -5,6 +5,7 @@ import android.content.Intent
 import android.os.Build
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
+import io.legado.app.api.ShortCuts
 import io.legado.app.ui.book.search.SearchActivity
 import io.legado.app.ui.main.MainActivity
 import io.legado.app.utils.startActivity
@@ -36,6 +37,7 @@ class SharedReceiverActivity : AppCompatActivity() {
                 }
             }
             intent.getStringExtra("action") == "readAloud" -> {
+                ShortCuts.reportUsage(this, intent)
                 MediaButtonReceiver.readAloud(appCtx, false)
             }
         }
@@ -49,7 +51,7 @@ class SharedReceiverActivity : AppCompatActivity() {
         val result = StringBuilder()
         for (url in urls) {
             if (url.matches("http.+".toRegex()))
-                result.append("\n").append(url.trim { it <= ' ' })
+                result.append("\n").append(url.trim())
         }
         if (result.length > 1) {
             startActivity<MainActivity>()

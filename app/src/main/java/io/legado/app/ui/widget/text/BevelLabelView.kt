@@ -1,5 +1,6 @@
 package io.legado.app.ui.widget.text
 
+import android.annotation.SuppressLint
 import android.content.Context
 import android.graphics.Canvas
 import android.graphics.Color
@@ -50,6 +51,8 @@ class BevelLabelView @JvmOverloads constructor(
     private var mY: Int = 0
 
     init {
+        // KTX 闭包无法初始化多项只读属性，保留显式回收以维持初始化顺序。
+        @SuppressLint("UseKtx")
         val typedArray = context.obtainStyledAttributes(attrs, R.styleable.BevelLabelView)
         mBgColor = typedArray.getColor(
             R.styleable.BevelLabelView_label_bg_color,

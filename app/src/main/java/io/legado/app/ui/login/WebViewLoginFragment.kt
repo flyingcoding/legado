@@ -1,5 +1,7 @@
 package io.legado.app.ui.login
 
+import androidx.core.net.toUri
+
 import android.annotation.SuppressLint
 import android.graphics.Bitmap
 import android.net.Uri
@@ -104,7 +106,7 @@ class WebViewLoginFragment : BaseFragment(R.layout.fragment_web_view_login) {
 
             @Suppress("DEPRECATION", "OVERRIDE_DEPRECATION", "KotlinRedundantDiagnosticSuppress")
             override fun shouldOverrideUrlLoading(view: WebView, url: String): Boolean {
-                return shouldOverrideUrlLoading(Uri.parse(url))
+                return shouldOverrideUrlLoading(url.toUri())
             }
 
             private fun shouldOverrideUrlLoading(url: Uri): Boolean {

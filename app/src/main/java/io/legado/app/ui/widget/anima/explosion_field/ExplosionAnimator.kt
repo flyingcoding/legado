@@ -15,6 +15,8 @@
  */
 package io.legado.app.ui.widget.anima.explosion_field
 
+import androidx.core.graphics.get
+
 import android.animation.ValueAnimator
 import android.annotation.SuppressLint
 import android.graphics.*
@@ -40,7 +42,7 @@ class ExplosionAnimator(private val mContainer: View, bitmap: Bitmap, bound: Rec
         for (i in 0 until partLen) {
             for (j in 0 until partLen) {
                 mParticles[i * partLen + j] =
-                    generateParticle(bitmap.getPixel((j + 1) * w, (i + 1) * h), random)
+                    generateParticle(bitmap[(j + 1) * w, (i + 1) * h], random)
             }
         }
         setFloatValues(0f, END_VALUE)

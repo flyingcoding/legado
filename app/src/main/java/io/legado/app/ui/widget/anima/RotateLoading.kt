@@ -1,5 +1,9 @@
 package io.legado.app.ui.widget.anima
 
+import androidx.core.content.withStyledAttributes
+import androidx.core.graphics.toColorInt
+import androidx.core.view.isVisible
+
 import android.animation.Animator
 import android.animation.AnimatorListenerAdapter
 import android.content.Context
@@ -65,20 +69,20 @@ class RotateLoading @JvmOverloads constructor(
         speedOfDegree = DEFAULT_SPEED_OF_DEGREE
 
         if (null != attrs) {
-            val typedArray = context.obtainStyledAttributes(attrs, R.styleable.RotateLoading)
-            loadingColor =
-                typedArray.getColor(R.styleable.RotateLoading_loading_color, loadingColor)
-            thisWidth = typedArray.getDimensionPixelSize(
-                R.styleable.RotateLoading_loading_width,
-                DEFAULT_WIDTH.dpToPx()
-            )
-            shadowPosition = typedArray.getInt(
-                R.styleable.RotateLoading_shadow_position,
-                DEFAULT_SHADOW_POSITION
-            )
-            speedOfDegree =
-                typedArray.getInt(R.styleable.RotateLoading_loading_speed, DEFAULT_SPEED_OF_DEGREE)
-            typedArray.recycle()
+            context.withStyledAttributes(attrs, R.styleable.RotateLoading) {
+                loadingColor =
+                    getColor(R.styleable.RotateLoading_loading_color, loadingColor)
+                thisWidth = getDimensionPixelSize(
+                    R.styleable.RotateLoading_loading_width,
+                    DEFAULT_WIDTH.dpToPx()
+                )
+                shadowPosition = getInt(
+                    R.styleable.RotateLoading_shadow_position,
+                    DEFAULT_SHADOW_POSITION
+                )
+                speedOfDegree =
+                    getInt(R.styleable.RotateLoading_loading_speed, DEFAULT_SPEED_OF_DEGREE)
+            }
         }
         speedOfArc = (speedOfDegree / 4).toFloat()
         mPaint = Paint()
@@ -117,7 +121,7 @@ class RotateLoading @JvmOverloads constructor(
             return
         }
 
-        mPaint.color = Color.parseColor("#1a000000")
+        mPaint.color = "#1a000000".toColorInt()
         shadowRectF?.let {
             canvas.drawArc(it, topDegree.toFloat(), arc, false, mPaint)
             canvas.drawArc(it, bottomDegree.toFloat(), arc, false, mPaint)
@@ -157,7 +161,7 @@ class RotateLoading @JvmOverloads constructor(
 
     override fun onAttachedToWindow() {
         super.onAttachedToWindow()
-        if (visibility == VISIBLE) {
+        if (isVisible) {
             startInternal()
         }
     }

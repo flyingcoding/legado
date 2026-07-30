@@ -1,5 +1,7 @@
 package io.legado.app.ui.book.read
 
+import androidx.core.net.toUri
+
 import android.annotation.SuppressLint
 import android.content.Intent
 import android.content.res.Configuration
@@ -23,6 +25,7 @@ import androidx.lifecycle.lifecycleScope
 import com.jaredrummler.android.colorpicker.ColorPickerDialogListener
 import io.legado.app.BuildConfig
 import io.legado.app.R
+import io.legado.app.api.ShortCuts
 import io.legado.app.constant.AppConst
 import io.legado.app.constant.AppLog
 import io.legado.app.constant.BookType
@@ -293,6 +296,7 @@ class ReadBookActivity : BaseReadBookActivity(),
     @SuppressLint("ClickableViewAccessibility")
     override fun onActivityCreated(savedInstanceState: Bundle?) {
         super.onActivityCreated(savedInstanceState)
+        ShortCuts.reportUsage(this, intent)
         binding.cursorLeft.setColorFilter(accentColor)
         binding.cursorRight.setColorFilter(accentColor)
         binding.cursorLeft.setOnTouchListener(this)
@@ -339,6 +343,7 @@ class ReadBookActivity : BaseReadBookActivity(),
 
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
+        ShortCuts.reportUsage(this, intent)
         viewModel.initData(intent)
     }
 
@@ -1521,7 +1526,7 @@ class ReadBookActivity : BaseReadBookActivity(),
                             value = src
                         }
                     } else {
-                        viewModel.saveImage(src, Uri.parse(path))
+                        viewModel.saveImage(src, path.toUri())
                     }
                 }
 

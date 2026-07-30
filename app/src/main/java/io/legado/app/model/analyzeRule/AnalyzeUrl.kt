@@ -198,9 +198,9 @@ class AnalyzeUrl(
             while (matcher.find()) {
                 val pages = matcher.group(1)!!.split(",")
                 ruleUrl = if (page < pages.size) { //pages[pages.size - 1]等同于pages.last()
-                    ruleUrl.replace(matcher.group(), pages[page - 1].trim { it <= ' ' })
+                    ruleUrl.replace(matcher.group(), pages[page - 1].trim())
                 } else {
-                    ruleUrl.replace(matcher.group(), pages.last().trim { it <= ' ' })
+                    ruleUrl.replace(matcher.group(), pages.last().trim())
                 }
             }
         }

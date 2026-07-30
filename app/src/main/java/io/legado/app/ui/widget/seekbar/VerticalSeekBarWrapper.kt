@@ -1,5 +1,7 @@
 package io.legado.app.ui.widget.seekbar
 
+import androidx.core.view.isNotEmpty
+
 import android.annotation.SuppressLint
 import android.content.Context
 import android.util.AttributeSet
@@ -18,7 +20,7 @@ class VerticalSeekBarWrapper @JvmOverloads constructor(
 
     private val childSeekBar: VerticalSeekBar?
         get() {
-            val child = if (childCount > 0) getChildAt(0) else null
+            val child = if (isNotEmpty()) getChildAt(0) else null
             return if (child is VerticalSeekBar) child else null
         }
 

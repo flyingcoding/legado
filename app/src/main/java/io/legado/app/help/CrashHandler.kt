@@ -1,5 +1,7 @@
 package io.legado.app.help
 
+import androidx.core.net.toUri
+
 import android.annotation.SuppressLint
 import android.content.Context
 import android.net.Uri
@@ -147,7 +149,7 @@ class CrashHandler(val context: Context) : Thread.UncaughtExceptionHandler {
             try {
                 val backupPath = AppConfig.backupPath
                     ?: throw NoStackTraceException("备份路径未配置")
-                val uri = Uri.parse(backupPath)
+                val uri = backupPath.toUri()
                 val fileDoc = FileDoc.fromUri(uri, true)
                 fileDoc.createFileIfNotExist(fileName, "crash")
                     .writeText(crashLog)
