@@ -72,6 +72,12 @@ android {
         buildConfig = true
         viewBinding = true
     }
+    bundle {
+        // 应用内切换语言需要所有语言资源随基础 APK 安装。
+        language {
+            enableSplit = false
+        }
+    }
     buildTypes {
         release {
             if (project.hasProperty("RELEASE_STORE_FILE")) {

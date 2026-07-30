@@ -76,7 +76,7 @@ class DetailSeekBar @JvmOverloads constructor(
         valueFormat?.let {
             binding.tvSeekValue.text = it.invoke(progress)
         } ?: let {
-            binding.tvSeekValue.text = progress.toString()
+            binding.tvSeekValue.text = context.getString(R.string.number_value, progress)
         }
     }
 

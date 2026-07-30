@@ -4,9 +4,8 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:background="@drawable/bg_item_focused_on_tv"
+    android:background="@drawable/bg_prefs_color"
     android:focusable="true"
-    android:foreground="?android:attr/selectableItemBackground"
     android:padding="16dp"
     android:scrollbars="none">
 

@@ -6,7 +6,10 @@
     android:background="@color/background"
     android:padding="8dp"
     android:gravity="center_vertical"
-    android:orientation="horizontal">
+    android:orientation="horizontal"
+    tools:ignore="Overdraw">
+
+    <!-- 该布局作为独立列表项加载，根背景提供服务器选项底色。 -->
 
     <io.legado.app.lib.theme.view.ThemeRadioButton
         android:id="@+id/rb_server"

@@ -39,7 +39,7 @@ data class ReviewColumn(
 
     /** 返回供 TalkBack 使用的真实评论计数描述。 */
     fun accessibilityDescription(context: Context): String =
-        context.getString(R.string.review_count_description, count)
+        context.resources.getQuantityString(R.plurals.review_count_description, count, count)
 
     val path by lazy { Path() }
 

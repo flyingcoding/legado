@@ -278,7 +278,7 @@ class ThemeConfigFragment : PreferenceFragment(),
             val alertBinding = DialogImageBlurringBinding.inflate(layoutInflater).apply {
                 getPrefInt(preferKey, 0).let {
                     seekBar.progress = it
-                    textViewValue.text = it.toString()
+                    textViewValue.text = getString(R.string.number_value, it)
                 }
                 seekBar.setOnSeekBarChangeListener(object : SeekBarChangeListener {
                     override fun onProgressChanged(
@@ -286,7 +286,7 @@ class ThemeConfigFragment : PreferenceFragment(),
                         progress: Int,
                         fromUser: Boolean
                     ) {
-                        textViewValue.text = progress.toString()
+                        textViewValue.text = getString(R.string.number_value, progress)
                     }
                 })
             }

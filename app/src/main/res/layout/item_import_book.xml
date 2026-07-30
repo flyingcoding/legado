@@ -6,7 +6,10 @@
     android:layout_height="60dp"
     android:background="?attr/selectableItemBackground"
     android:orientation="horizontal"
-    android:baselineAligned="false">
+    android:baselineAligned="false"
+    tools:ignore="Overdraw">
+
+    <!-- 该布局作为独立列表项加载，根背景提供按压反馈。 -->
 
     <FrameLayout
         android:layout_width="60dp"

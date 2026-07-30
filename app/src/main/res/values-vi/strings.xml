@@ -130,7 +130,7 @@
     <string name="screen_portrait">Dọc</string>
     <string name="screen_unspecified">Theo hệ thống</string>
     <string name="disclaimer">Tuyên bố miễn trừ trách nhiệm</string>
-    <string name="all_chapter_num">%d chương</string>
+    <plurals name="all_chapter_num"><item quantity="other">%d chương</item></plurals>
     <string name="interface_setting">Giao diện</string>
     <string name="brightness">Độ sáng</string>
     <string name="chapter_list">Danh sách chương</string>
@@ -265,7 +265,7 @@
     <string name="content_sl">Đây là một đoạn văn bản thử nghiệm, \n\u3000\u3000 chỉ để cho bạn thấy hiệu ứng</string>
     <string name="text_bg_style">Màu và nền (nhấn giữ để tùy chỉnh)</string>
     <string name="immersion_status_bar">Thanh trạng thái chìm</string>
-    <string name="un_download">Còn lại %d chương</string>
+    <plurals name="un_download"><item quantity="other">Còn lại %d chương</item></plurals>
     <string name="long_click_input_color">Nhấn giữ để nhập giá trị màu</string>
     <string name="loading">Đang tải…</string>
     <string name="group_zg">Đang theo dõi</string>
@@ -280,7 +280,7 @@
     <string name="clear_bookshelf_s">Thao tác này sẽ xóa tất cả sách. Vui lòng cẩn thận.</string>
     <string name="search_book_source">Tìm kiếm nguồn sách</string>
     <string name="search_rss_source">Tìm kiếm nguồn RSS</string>
-    <string name="search_book_source_num">Tìm kiếm (tổng cộng %d nguồn)</string>
+    <plurals name="search_book_source_num"><item quantity="other">Tìm kiếm (tổng cộng %d nguồn)</item></plurals>
     <string name="chapter_list_size">Chương (%d)</string>
     <string name="text_bold">In đậm</string>
     <string name="text_font">Phông chữ</string>
@@ -305,11 +305,11 @@
     <string name="jf_convert_f">Giản thể sang Phồn thể</string>
     <string name="jf_convert_j">Phồn thể sang Giản thể</string>
     <string name="page_mode">Chế độ lật trang</string>
-    <string name="nb_file_sub_count">%1$d mục</string>
+    <plurals name="nb_file_sub_count"><item quantity="other">%1$d mục</item></plurals>
     <string name="nb_file_path">Bộ nhớ:</string>
     <string name="nb_file_add_shelf">Thêm vào tủ sách</string>
     <string name="nb_file_add_shelves">Thêm vào tủ sách (%1$d)</string>
-    <string name="nb_file_add_succeed">Đã thêm thành công %1$d sách</string>
+    <plurals name="nb_file_add_succeed"><item quantity="other">Đã thêm thành công %1$d sách</item></plurals>
     <string name="fonts_folder">Vui lòng đặt tệp phông chữ vào thư mục Fonts của thư mục gốc bộ nhớ và chọn lại</string>
     <string name="default_font">Phông chữ mặc định</string>
     <string name="select_font">Chọn phông chữ</string>
@@ -1216,4 +1216,10 @@
     <string name="auto_check_new_backup_t">自动检查新备份</string>
     <string name="auto_check_new_backup_s">打开软件时检查是否有新备份，有新备份时提示是否更新</string>
     <string name="sys_image_picker">系统图片选择器</string>
+    <string name="select_date">Chọn ngày</string>
+    <string name="clipboard_import">Nhập từ bảng nhớ tạm</string>
+    <string name="search_result">Kết quả</string>
+    <string name="open_url_confirm_message">%1$s đang yêu cầu mở một liên kết hoặc ứng dụng. Tiếp tục?</string>
+    <string name="chapter_locked">Chương đã khóa</string>
+    <plurals name="review_count_description"><item quantity="other">Đoạn này có %1$d bình luận</item></plurals>
 </resources>

@@ -128,7 +128,7 @@
     <string name="screen_portrait">豎向</string>
     <string name="screen_unspecified">跟隨系統</string>
     <string name="disclaimer">免責聲明</string>
-    <string name="all_chapter_num">共%d章</string>
+    <plurals name="all_chapter_num"><item quantity="other">共%d章</item></plurals>
     <string name="interface_setting">介面</string>
     <string name="brightness">亮度</string>
     <string name="chapter_list">目錄</string>
@@ -263,7 +263,7 @@
     <string name="content_sl">這是一段測試文字\n\u3000\u3000只是讓你看看效果的</string>
     <string name="text_bg_style">文字顏色和背景(長按自訂)</string>
     <string name="immersion_status_bar">沉浸式狀態欄</string>
-    <string name="un_download">還剩%d章未下載</string>
+    <plurals name="un_download"><item quantity="other">還剩%d章未下載</item></plurals>
     <string name="long_click_input_color">長按輸入顏色值</string>
     <string name="loading">載入中…</string>
     <string name="group_zg">追更區</string>
@@ -278,7 +278,7 @@
     <string name="clear_bookshelf_s">這將會刪除所有書籍，請謹慎操作。</string>
     <string name="search_book_source">搜尋書源</string>
     <string name="search_rss_source">搜尋訂閱源</string>
-    <string name="search_book_source_num">搜尋(共%d個書源)</string>
+    <plurals name="search_book_source_num"><item quantity="other">搜尋(共%d個書源)</item></plurals>
     <string name="chapter_list_size">目錄(%d)</string>
     <string name="text_bold">加粗</string>
     <string name="text_font">字體</string>
@@ -303,11 +303,11 @@
     <string name="jf_convert_f">簡轉繁</string>
     <string name="jf_convert_j">繁轉簡</string>
     <string name="page_mode">翻頁模式</string>
-    <string name="nb_file_sub_count">%1$d 項</string>
+    <plurals name="nb_file_sub_count"><item quantity="other">%1$d 項</item></plurals>
     <string name="nb_file_path">記憶卡：</string>
     <string name="nb_file_add_shelf">加入書架</string>
     <string name="nb_file_add_shelves">加入書架(%1$d)</string>
-    <string name="nb_file_add_succeed">成功新增%1$d本書</string>
+    <plurals name="nb_file_add_succeed"><item quantity="other">成功新增%1$d本書</item></plurals>
     <string name="fonts_folder">請將字體檔案放到SD根目錄Fonts資料夾下重新選擇</string>
     <string name="default_font">預設字體</string>
     <string name="select_font">選擇字體</string>
@@ -1216,4 +1216,10 @@
     <string name="auto_check_new_backup_t">自动检查新备份</string>
     <string name="auto_check_new_backup_s">打开软件时检查是否有新备份，有新备份时提示是否更新</string>
     <string name="sys_image_picker">系统图片选择器</string>
+    <string name="select_date">選擇日期</string>
+    <string name="clipboard_import">從剪貼簿匯入</string>
+    <string name="search_result">結果</string>
+    <string name="open_url_confirm_message">%1$s 正在請求開啟連結或應用程式，是否繼續？</string>
+    <string name="chapter_locked">章節已鎖定</string>
+    <plurals name="review_count_description"><item quantity="other">本段有 %1$d 則評論</item></plurals>
 </resources>

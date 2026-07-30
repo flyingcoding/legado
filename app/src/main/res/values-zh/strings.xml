@@ -133,7 +133,9 @@
     <string name="screen_portrait">竖向</string>
     <string name="screen_unspecified">跟随系统</string>
     <string name="disclaimer">免责声明</string>
-    <string name="all_chapter_num">共 %d 章</string>
+    <plurals name="all_chapter_num">
+        <item quantity="other">共 %d 章</item>
+    </plurals>
     <string name="interface_setting">界面</string>
     <string name="brightness">亮度</string>
     <string name="chapter_list">目录</string>
@@ -268,7 +270,9 @@
     <string name="content_sl">这是一段测试文字\n\u3000\u3000只是让你看看效果的</string>
     <string name="text_bg_style">文字颜色和背景（长按自定义）</string>
     <string name="immersion_status_bar">沉浸式状态栏</string>
-    <string name="un_download">还剩 %d 章未下载</string>
+    <plurals name="un_download">
+        <item quantity="other">还剩 %d 章未下载</item>
+    </plurals>
     <string name="long_click_input_color">长按输入颜色值</string>
     <string name="loading">加载中…</string>
     <string name="group_zg">追更区</string>
@@ -283,7 +287,9 @@
     <string name="clear_bookshelf_s">这将会删除所有书籍，请谨慎操作。</string>
     <string name="search_book_source">搜索书源</string>
     <string name="search_rss_source">搜索订阅源</string>
-    <string name="search_book_source_num">搜索（共 %d 个书源）</string>
+    <plurals name="search_book_source_num">
+        <item quantity="other">搜索（共 %d 个书源）</item>
+    </plurals>
     <string name="chapter_list_size">目录（%d）</string>
     <string name="text_bold">加粗</string>
     <string name="text_font">字体</string>
@@ -308,11 +314,15 @@
     <string name="jf_convert_f">简转繁</string>
     <string name="jf_convert_j">繁转简</string>
     <string name="page_mode">翻页模式</string>
-    <string name="nb_file_sub_count">%1$d 项</string>
+    <plurals name="nb_file_sub_count">
+        <item quantity="other">%1$d 项</item>
+    </plurals>
     <string name="nb_file_path">存储卡：</string>
     <string name="nb_file_add_shelf">加入书架</string>
     <string name="nb_file_add_shelves">加入书架（%1$d）</string>
-    <string name="nb_file_add_succeed">成功添加 %1$d 本书</string>
+    <plurals name="nb_file_add_succeed">
+        <item quantity="other">成功添加 %1$d 本书</item>
+    </plurals>
     <string name="fonts_folder">请将字体文件放到存储根目录 Fonts 文件夹下后重新选择</string>
     <string name="default_font">默认字体</string>
     <string name="select_font">选择字体</string>
@@ -1034,7 +1044,9 @@
     <string name="show_add_to_shelf_alert_title">返回时提示放入书架</string>
     <string name="show_add_to_shelf_alert_summary">阅读未放入书架的书籍在返回时提示放入书架</string>
     <string name="review">段评</string>
-    <string name="review_count_description">本段有 %1$d 条评论</string>
+    <plurals name="review_count_description">
+        <item quantity="other">本段有 %1$d 条评论</item>
+    </plurals>
     <string name="review_dialog_title">段落评论</string>
     <string name="review_anonymous_user">匿名用户</string>
     <string name="review_unknown_time">时间未知</string>
@@ -1270,4 +1282,9 @@
     <string name="auto_check_new_backup_t">自动检查新备份</string>
     <string name="auto_check_new_backup_s">打开软件时检查是否有新备份，有新备份时提示是否更新</string>
     <string name="sys_image_picker">系统图片选择器</string>
+    <string name="select_date">选择日期</string>
+    <string name="clipboard_import">从剪贴板导入</string>
+    <string name="search_result">结果</string>
+    <string name="open_url_confirm_message">%1$s 正在请求打开链接或应用，是否继续？</string>
+    <string name="chapter_locked">章节已锁定</string>
 </resources>

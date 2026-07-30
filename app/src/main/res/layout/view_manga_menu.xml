@@ -73,6 +73,7 @@
 
     </io.legado.app.ui.widget.TitleBar>
 
+    <!-- 该容器承载菜单动画、动态背景和导航栏 inset，不能与子布局合并。 -->
     <LinearLayout
         android:id="@+id/bottom_menu"
         android:layout_width="match_parent"
@@ -80,6 +81,7 @@
         android:background="@color/background_menu"
         android:importantForAccessibility="no"
         android:orientation="vertical"
+        tools:ignore="UselessParent"
         app:layout_constraintBottom_toBottomOf="parent">
 
         <LinearLayout

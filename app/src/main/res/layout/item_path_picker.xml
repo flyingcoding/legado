@@ -1,11 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
-    android:orientation="horizontal"
     android:layout_width="wrap_content"
     android:layout_height="match_parent"
     android:clickable="true"
-    android:focusable="true">
+    android:focusable="true"
+    android:orientation="horizontal"
+    tools:ignore="UseCompoundDrawables">
+
+    <!-- 箭头来自运行时字节数组，独立槽位用于约束尺寸并保持原点击区域。 -->
 
     <TextView
         android:id="@+id/text_view"
@@ -17,6 +20,7 @@
         android:id="@+id/image_view"
         android:layout_width="20dp"
         android:layout_height="match_parent"
+        android:importantForAccessibility="no"
         tools:ignore="ContentDescription" />
 
 </LinearLayout>

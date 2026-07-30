@@ -33,12 +33,12 @@
             android:gravity="center_vertical">
 
             <androidx.appcompat.widget.SwitchCompat
-                android:layout_height="wrap_content"
                 android:id="@+id/sr_enabled"
+                style="@style/Widget.AppCompat.CompoundButton.Switch"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
                 android:layout_weight="1"
                 android:gravity="start|center_vertical"
-                style="@style/Widget.AppCompat.CompoundButton.Switch"
-                android:layout_width="match_parent"
                 android:width="20dp" />
         </LinearLayout>
 
@@ -77,16 +77,17 @@
             android:layout_weight="1" />
 
         <EditText
-            android:layout_width="match_parent"
-            android:layout_height="49dp"
-            android:inputType="none"
-            android:ems="10"
             android:id="@+id/start_date"
-            android:hint="Select date"
+            android:layout_width="0dp"
+            android:layout_height="49dp"
             android:layout_weight="1"
+            android:layout_marginEnd="68dp"
             android:clickable="true"
-            android:textSize="16sp"
-            android:layout_marginRight="68dp" />
+            android:focusable="true"
+            android:hint="@string/select_date"
+            android:importantForAutofill="no"
+            android:inputType="date"
+            android:textSize="16sp" />
 
         <View
             android:layout_width="0dp"
@@ -99,7 +100,7 @@
         android:orientation="horizontal"
         android:layout_width="match_parent"
         android:layout_height="63dp"
-        android:gravity="center_horizontal|left"
+        android:gravity="start|center_vertical"
         android:padding="16dp">
 
         <LinearLayout
@@ -151,8 +152,8 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_gravity="center_vertical"
-                android:layout_marginLeft="25dp"
-                android:layout_marginRight="5dp"
+                android:layout_marginStart="25dp"
+                android:layout_marginEnd="5dp"
                 android:text="@string/daily_chapters"
                 android:textColor="@color/primaryText"
                 android:textSize="16sp" />
@@ -163,7 +164,7 @@
                 android:layout_height="wrap_content"
                 android:layout_gravity="center"
                 android:background="@drawable/bg_edit"
-                android:hint="3"
+                android:hint="@string/simulated_reading_daily_chapters_default"
                 android:importantForAutofill="no"
                 android:inputType="number"
                 android:lines="1"

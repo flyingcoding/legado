@@ -6,7 +6,10 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@color/book_ant_10"
-    android:contentDescription="@null">
+    android:contentDescription="@null"
+    tools:ignore="Overdraw">
+
+    <!-- 该布局作为漫画页独立加载，根背景用于图片加载前后的阅读底色。 -->
 
     <androidx.appcompat.widget.AppCompatImageView
         android:id="@+id/image"
@@ -42,7 +45,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="center"
-            android:text="重新加载"
+            android:text="@string/retry"
             android:textColor="@color/white"
             android:textSize="18sp"
             android:visibility="gone"
@@ -55,9 +58,9 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="center"
-            android:text="0%"
             android:textColor="@color/white"
             android:visibility="gone"
+            tools:text="0%"
             tools:visibility="visible" />
     </FrameLayout>
 

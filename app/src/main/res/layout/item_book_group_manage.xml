@@ -6,7 +6,10 @@
     android:background="@color/background"
     android:gravity="center_vertical"
     android:orientation="horizontal"
-    android:padding="8dp">
+    android:padding="8dp"
+    tools:ignore="Overdraw">
+
+    <!-- 该布局作为独立列表项加载，根背景提供分组内容底色。 -->
 
     <TextView
         android:id="@+id/tv_group"

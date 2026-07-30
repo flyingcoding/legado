@@ -1,11 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="wrap_content"
     android:layout_height="wrap_content"
     android:background="@color/background"
     android:gravity="center"
     android:padding="20dp"
-    android:orientation="horizontal">
+    android:orientation="horizontal"
+    tools:ignore="Overdraw">
+
+    <!-- 该布局作为独立 Dialog 内容加载，根背景不由 Activity window 覆盖。 -->
 
     <io.legado.app.lib.theme.view.ThemeProgressBar
         android:id="@+id/pb"

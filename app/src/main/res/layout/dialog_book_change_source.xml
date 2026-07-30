@@ -4,7 +4,10 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/background">
+    android:background="@color/background"
+    tools:ignore="Overdraw">
+
+    <!-- 该布局作为独立 Dialog 内容加载，根背景不由 Activity window 覆盖。 -->
 
     <androidx.appcompat.widget.Toolbar
         android:id="@+id/tool_bar"

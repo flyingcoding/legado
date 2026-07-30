@@ -134,7 +134,7 @@
     <string name="screen_portrait">Portrait</string>
     <string name="screen_unspecified">Follow system</string>
     <string name="disclaimer">Disclaimer</string>
-    <string name="all_chapter_num">%d chapters</string>
+    <plurals name="all_chapter_num"><item quantity="other">%d 章</item></plurals>
     <string name="interface_setting">Interface</string>
     <string name="brightness">Brightness</string>
     <string name="chapter_list">Chapters</string>
@@ -269,7 +269,7 @@
     <string name="content_sl">This is a test text, \n\u3000\u3000 just to show you the effect</string>
     <string name="text_bg_style">Color and background (long tap to customize)</string>
     <string name="immersion_status_bar">Immersive status bar</string>
-    <string name="un_download">%d chapter(s) left</string>
+    <plurals name="un_download"><item quantity="other">残り %d 章</item></plurals>
     <string name="long_click_input_color">Long tap to input color value</string>
     <string name="loading">Loading…</string>
     <string name="group_zg">Awaiting</string>
@@ -284,7 +284,7 @@
     <string name="clear_bookshelf_s">It will delete all books. Be careful,please.</string>
     <string name="search_book_source">Search book sources</string>
     <string name="search_rss_source">Search subscription sources</string>
-    <string name="search_book_source_num">Search( %d sources in total)</string>
+    <plurals name="search_book_source_num"><item quantity="other">検索（全 %d 件のソース）</item></plurals>
     <string name="chapter_list_size">Chapters(%d)</string>
     <string name="text_bold">Bold</string>
     <string name="text_font">Font</string>
@@ -309,11 +309,11 @@
     <string name="jf_convert_f">Simplified to traditional</string>
     <string name="jf_convert_j">Traditional to simplified</string>
     <string name="page_mode">Flipping mode</string>
-    <string name="nb_file_sub_count">%1$d items</string>
+    <plurals name="nb_file_sub_count"><item quantity="other">%1$d 件</item></plurals>
     <string name="nb_file_path">Storage:</string>
     <string name="nb_file_add_shelf">Add to Bookshelf</string>
     <string name="nb_file_add_shelves">Add to Bookshelf(%1$d)</string>
-    <string name="nb_file_add_succeed">%1$d books added successfully</string>
+    <plurals name="nb_file_add_succeed"><item quantity="other">%1$d 冊の本を追加しました</item></plurals>
     <string name="fonts_folder">Please put the font files in the Fonts folder of the storage root directory and reselect</string>
     <string name="default_font">Default font</string>
     <string name="select_font">Select fonts</string>
@@ -1224,4 +1224,10 @@
     <string name="auto_check_new_backup_t">自动检查新备份</string>
     <string name="auto_check_new_backup_s">打开软件时检查是否有新备份，有新备份时提示是否更新</string>
     <string name="sys_image_picker">系统图片选择器</string>
+    <string name="select_date">日付を選択</string>
+    <string name="clipboard_import">クリップボードからインポート</string>
+    <string name="search_result">検索結果</string>
+    <string name="open_url_confirm_message">%1$s がリンクまたはアプリを開こうとしています。続行しますか？</string>
+    <string name="chapter_locked">ロックされた章</string>
+    <plurals name="review_count_description"><item quantity="other">この段落には %1$d 件のコメントがあります</item></plurals>
 </resources>

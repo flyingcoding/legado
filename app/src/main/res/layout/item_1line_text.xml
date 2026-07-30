@@ -7,7 +7,9 @@
     android:orientation="horizontal"
     android:padding="6dp"
     android:background="?attr/selectableItemBackground"
-    tools:ignore="UseCompoundDrawables">
+    tools:ignore="Overdraw,UseCompoundDrawables">
+
+    <!-- 该布局作为独立列表项加载，根背景提供按压反馈。 -->
 
     <TextView
         android:id="@+id/text_view"

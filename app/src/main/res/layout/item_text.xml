@@ -1,4 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- 该布局作为独立列表项加载，根背景提供按压反馈。 -->
 <TextView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/text_view"
@@ -12,4 +13,4 @@
     android:scrollbars="none"
     android:textColor="@color/primaryText"
     android:textSize="14sp"
-    tools:ignore="UnusedAttribute" />
+    tools:ignore="Overdraw,UnusedAttribute" />

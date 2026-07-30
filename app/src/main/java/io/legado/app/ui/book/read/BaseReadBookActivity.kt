@@ -292,10 +292,11 @@ abstract class BaseReadBookActivity :
         val dateFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd")
         val alertBinding = DialogSimulatedReadingBinding.inflate(layoutInflater).apply {
             srEnabled.isChecked = book.getReadSimulating()
-            editStart.setText(book.getStartChapter().toString())
-            editNum.setText(book.getDailyChapters().toString())
+            editStart.setText(getString(R.string.number_value, book.getStartChapter()))
+            editNum.setText(getString(R.string.number_value, book.getDailyChapters()))
             startDate.setText(book.getStartDate()?.format(dateFormatter))
-            startDate.isFocusable = false // 设置为false，不允许获得焦点
+            // 日期只允许通过选择器修改，避免非法文本进入 LocalDate 解析路径。
+            startDate.keyListener = null
             startDate.isCursorVisible = false // 不显示光标
             startDate.setOnClickListener {
                 // 获取当前日期

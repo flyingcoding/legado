@@ -7,12 +7,17 @@
     android:layout_height="wrap_content"
     android:background="?android:attr/selectableItemBackground"
     android:orientation="vertical"
-    android:padding="12dp">
+    android:padding="12dp"
+    tools:ignore="Overdraw">
+
+    <!-- 该布局作为独立列表项加载，根背景提供按压反馈。 -->
 
     <ImageView
         android:id="@+id/iv_locked"
         android:layout_width="24dp"
         android:layout_height="24dp"
+        android:contentDescription="@string/chapter_locked"
+        android:paddingStart="0dp"
         android:paddingEnd="8dp"
         android:src="@drawable/ic_lock_outline"
         android:visibility="gone"

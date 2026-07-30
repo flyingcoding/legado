@@ -60,7 +60,7 @@ class CheckSourceConfig : BaseDialogFragment(R.layout.dialog_check_source_config
             }
         }
         CheckSource.run {
-            binding.checkSourceTimeout.setText((timeout / 1000).toString())
+            binding.checkSourceTimeout.setText(getString(R.string.number_value, timeout / 1000))
             binding.checkSearch.isChecked = checkSearch
             binding.checkDiscovery.isChecked = checkDiscovery
             binding.checkInfo.isChecked = checkInfo

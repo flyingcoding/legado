@@ -129,7 +129,7 @@ class RssFragment() : VMBaseFragment<RssViewModel>(R.layout.fragment_rss),
         adapter.addHeaderView {
             ItemRssBinding.inflate(layoutInflater, it, false).apply {
                 tvName.setText(R.string.rule_subscription)
-                ivIcon.setImageResource(R.drawable.image_legado)
+                ivIcon.setImageResource(R.mipmap.ic_launcher)
                 root.setOnClickListener {
                     startActivity<RuleSubActivity>()
                 }

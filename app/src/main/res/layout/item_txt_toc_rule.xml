@@ -5,7 +5,10 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:background="?android:attr/selectableItemBackground"
-    android:padding="16dp">
+    android:padding="16dp"
+    tools:ignore="Overdraw">
+
+    <!-- 该布局作为独立列表项加载，根背景提供按压反馈。 -->
 
     <io.legado.app.lib.theme.view.ThemeCheckBox
         android:id="@+id/cb_source"

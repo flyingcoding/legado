@@ -1,9 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/fl_fragment"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    android:background="@color/transparent50">
+    android:background="@color/transparent50"
+    tools:ignore="Overdraw">
+
+    <!-- 半透明遮罩用于突出登录层，不能由不透明 window 背景替代。 -->
 
 </LinearLayout>

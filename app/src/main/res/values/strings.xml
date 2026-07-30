@@ -134,7 +134,10 @@
     <string name="screen_portrait">Portrait</string>
     <string name="screen_unspecified">Follow system</string>
     <string name="disclaimer">Disclaimer</string>
-    <string name="all_chapter_num">%d chapters</string>
+    <plurals name="all_chapter_num">
+        <item quantity="one">%d chapter</item>
+        <item quantity="other">%d chapters</item>
+    </plurals>
     <string name="interface_setting">Interface</string>
     <string name="brightness">Brightness</string>
     <string name="chapter_list">Chapters</string>
@@ -270,7 +273,10 @@
     <string name="content_sl">This is a test text, \n\u3000\u3000 just to show you the effect</string>
     <string name="text_bg_style">Color and background (long tap to customize)</string>
     <string name="immersion_status_bar">Immersive status bar</string>
-    <string name="un_download">%d chapter(s) left</string>
+    <plurals name="un_download">
+        <item quantity="one">%d chapter left</item>
+        <item quantity="other">%d chapters left</item>
+    </plurals>
     <string name="long_click_input_color">Long tap to input color value</string>
     <string name="loading">Loading…</string>
     <string name="group_zg">Awaiting</string>
@@ -285,7 +291,10 @@
     <string name="clear_bookshelf_s">It will delete all books. Be careful,please.</string>
     <string name="search_book_source">Search book sources</string>
     <string name="search_rss_source">Search RSS sources</string>
-    <string name="search_book_source_num">Search( %d sources in total)</string>
+    <plurals name="search_book_source_num">
+        <item quantity="one">Search (%d source in total)</item>
+        <item quantity="other">Search (%d sources in total)</item>
+    </plurals>
     <string name="chapter_list_size">Chapters(%d)</string>
     <string name="text_bold">Bold</string>
     <string name="text_font">Font</string>
@@ -310,11 +319,17 @@
     <string name="jf_convert_f">Simplified to traditional</string>
     <string name="jf_convert_j">Traditional to simplified</string>
     <string name="page_mode">Flipping mode</string>
-    <string name="nb_file_sub_count">%1$d items</string>
+    <plurals name="nb_file_sub_count">
+        <item quantity="one">%1$d item</item>
+        <item quantity="other">%1$d items</item>
+    </plurals>
     <string name="nb_file_path">Storage:</string>
     <string name="nb_file_add_shelf">Add to Bookshelf</string>
     <string name="nb_file_add_shelves">Add to Bookshelf(%1$d)</string>
-    <string name="nb_file_add_succeed">%1$d books added successfully</string>
+    <plurals name="nb_file_add_succeed">
+        <item quantity="one">%1$d book added successfully</item>
+        <item quantity="other">%1$d books added successfully</item>
+    </plurals>
     <string name="fonts_folder">Please put the font files in the Fonts folder of the storage root directory and reselect</string>
     <string name="default_font">Default font</string>
     <string name="select_font">Select fonts</string>
@@ -1036,7 +1051,10 @@
     <string name="show_add_to_shelf_alert_title">Prompt to add to bookshelf when return</string>
     <string name="show_add_to_shelf_alert_summary">Prompt to add to bookshelf when return from reading books that are not on the bookshelf</string>
     <string name="review">Review</string>
-    <string name="review_count_description" tools:ignore="MissingTranslation">This paragraph has %1$d comments</string>
+    <plurals name="review_count_description">
+        <item quantity="one">This paragraph has %1$d comment</item>
+        <item quantity="other">This paragraph has %1$d comments</item>
+    </plurals>
     <string name="review_dialog_title" tools:ignore="MissingTranslation">Paragraph comments</string>
     <string name="review_anonymous_user" tools:ignore="MissingTranslation">Anonymous user</string>
     <string name="review_unknown_time" tools:ignore="MissingTranslation">Unknown time</string>
@@ -1272,4 +1290,11 @@
     <string name="auto_check_new_backup_t">自动检查新备份</string>
     <string name="auto_check_new_backup_s">打开软件时检查是否有新备份，有新备份时提示是否更新</string>
     <string name="sys_image_picker">系统图片选择器</string>
+    <string name="select_date">Select date</string>
+    <string name="clipboard_import">Import from clipboard</string>
+    <string name="search_result">Results</string>
+    <string name="open_url_confirm_message">%1$s is requesting to open a link or app. Continue?</string>
+    <string name="chapter_locked">Locked chapter</string>
+    <string name="number_value" translatable="false">%1$d</string>
+    <string name="simulated_reading_daily_chapters_default" translatable="false">3</string>
 </resources>

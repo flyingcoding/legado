@@ -6,7 +6,10 @@
     android:layout_height="wrap_content"
     android:background="?attr/selectableItemBackground"
     android:paddingLeft="10dp"
-    android:paddingRight="10dp">
+    android:paddingRight="10dp"
+    tools:ignore="Overdraw">
+
+    <!-- 该布局作为独立列表项加载，根背景提供按压反馈。 -->
 
     <TextView
         android:id="@+id/tv_book_name"

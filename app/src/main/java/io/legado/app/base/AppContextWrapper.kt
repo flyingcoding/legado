@@ -16,7 +16,8 @@ import java.util.*
 @Suppress("unused")
 object AppContextWrapper {
 
-    @SuppressLint("ObsoleteSdkInt")
+    // bundle 已禁用语言拆分，Lint 8.13.2 尚未识别对应的 Groovy DSL 配置。
+    @SuppressLint("AppBundleLocaleChanges", "ObsoleteSdkInt")
     fun wrap(context: Context): Context {
         val resources: Resources = context.resources
         val configuration: Configuration = resources.configuration
