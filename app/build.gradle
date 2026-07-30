@@ -19,9 +19,19 @@ static def releaseTime() {
     return new Date().format("yy.MMddHH", TimeZone.getTimeZone("GMT+8"))
 }
 
+// 获取当前仓库提交数，并固定 Git 子进程的工作目录以适配全新 Gradle daemon。
+static def gitCommitCount(File projectDir) {
+    def process = ['git', 'rev-list', 'HEAD', '--count'].execute(null, projectDir)
+    def output = process.text.trim()
+    if (process.waitFor() != 0 || output.isEmpty()) {
+        throw new GradleException("无法从 ${projectDir} 获取 Git 提交数")
+    }
+    return Integer.parseInt(output)
+}
+
 def name = "legado"
 def version = "3." + releaseTime()
-def gitCommits = Integer.parseInt('git rev-list HEAD --count'.execute().text.trim())
+def gitCommits = gitCommitCount(rootDir)
 
 android {
     compileSdk = compile_sdk_version

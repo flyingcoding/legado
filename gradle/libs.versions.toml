@@ -1,28 +1,47 @@
 [versions]
 
+# AGP 8.13.2 内置 R8 8.13.19 仅覆盖 Kotlin 2.3；Kotlin 2.4 需联动 R8/编译器迁移。
+#noinspection NewerVersionAvailable
 kotlin = "2.3.0"
 ksp = "2.3.4"
+# AGP 9.3 要求 Gradle 9.5，并需迁移内置 Kotlin、新 DSL 与旧 applicationVariants API。
+#noinspection AndroidGradlePluginVersion
 agp = "8.13.2"
 appcompat = "1.7.1"
 colorpicker = "1.1.0"
-constraintlayout = "2.2.1"
+# 2.2.2 仍支持 minSdk 21，且官方 AAR 仅要求 compileSdk 34。
+constraintlayout = "2.2.2"
+# Core 1.19.0 的官方 AAR 要求 minSdk 23、compileSdk 37 和 AGP 9.1，与当前基线不兼容。
+#noinspection GradleDependency
 core = "1.17.0"
 flexbox = "3.0.0"
 fragment = "1.8.9"
 documentfile = "1.1.0"
 
 libarchive = "1.1.6"
+# Glide 5.0.9 的官方 AAR 要求 compileSdk 37，当前 AGP 8.13.2 最高支持 36。
+#noinspection NewerVersionAvailable
 glide = "5.0.5"
-gson = "2.13.2"
+# 2.14.0 保持 Java 8/Android 兼容基线，新增适配器不要求调用方迁移。
+gson = "2.14.0"
+# JsonPath 3.0.0 是 Java 17 基线与 Jackson 3 provider 的主版本迁移，需独立评估运行时行为。
+#noinspection NewerVersionAvailable
 jsonPath = "2.10.0"
-jsoupxpath = "2.5.3"
-coroutines = "1.10.2"
+# 2.5.5 仅包含解析效率优化，且其 jsoup 传递依赖低于项目的 1.16.2 固定版本。
+jsoupxpath = "2.5.5"
+# 1.11.0 的破坏性调整仅涉及 JS/Wasm Promise API，Android/JVM 调用保持兼容。
+coroutines = "1.11.0"
 liveeventbus = "1.8.14"
 markwon = "4.6.2"
+# Material 1.14.0 的官方 AAR 将 minSdk 提升到 23，当前应用仍支持 API 21。
+#noinspection GradleDependency
 material = "1.13.0"
+# Media 1.8.0 的官方 AAR 将 minSdk 提升到 23，当前应用仍支持 API 21。
+#noinspection GradleDependency
 media = "1.7.1"
 nanoHttpd = "2.3.1"
-okhttp = "5.3.2"
+# 5.4.0 保持 OkHttp 5 稳定 API，并包含 HTTP/2 头部限制修复。
+okhttp = "5.4.0"
 preference = "1.2.1"
 quickChineseTransfer = "0.2.16"
 
@@ -31,9 +50,11 @@ desugar = "2.1.5"
 
 #kotlinxSerialization = "1.8.0"
 swiperefreshlayout = "1.2.0"
-collection = "1.5.0"
+collection = "1.6.0"
 startup = "1.2.0"
 
+# 3.5.0 将全部 Java 实现迁移到 Kotlin 并联动 CameraScan，二进制与运行时影响需专项验证。
+#noinspection NewerVersionAvailable
 zxingLite = "3.3.0"
 
 #不要更新版本
@@ -52,8 +73,8 @@ jsoup = "1.16.2"
 #noinspection GradleDependency,NewerVersionAvailable
 commonsText = "1.13.1"
 
-# 新版本使用了 Android 8 以下无法编译的 VarHandle.compareAndExchange 方法
-#noinspection GradleDependency
+# 1.9.1 延续使用 Android 8 以下不可用的 VarHandle.compareAndExchange，当前 minSdk 21 必须保留。
+#noinspection GradleDependency,NewerVersionAvailable
 rhino = "1.8.1"
 
 #noinspection GradleDependency,NewerVersionAvailable
@@ -80,7 +101,7 @@ activity-activity = { module = "androidx.activity:activity", version.ref = "acti
 activity-compose = { module = "androidx.activity:activity-compose", version.ref = "activity" }
 activity-ktx = { module = "androidx.activity:activity-ktx", version.ref = "activity" }
 
-androidx-annotation = { group = "androidx.annotation", name = "annotation", version = "1.9.1" }
+androidx-annotation = { group = "androidx.annotation", name = "annotation", version = "1.10.0" }
 #androidx-annotation-experimental = { group = "androidx.annotation", name = "annotation-experimental", version = "1.3.1" }
 
 androidx-collection = { module = "androidx.collection:collection", version.ref = "collection" }
@@ -91,7 +112,7 @@ androidx-constraintlayout = { module = "androidx.constraintlayout:constraintlayo
 core-core = { module = "androidx.core:core", version.ref = "core" }
 core-ktx = { module = "androidx.core:core-ktx", version.ref = "core" }
 
-androidx-espresso-core = { module = "androidx.test.espresso:espresso-core", version = "3.6.1" }
+androidx-espresso-core = { module = "androidx.test.espresso:espresso-core", version = "3.7.0" }
 
 firebase-bom = { module = "com.google.firebase:firebase-bom", version.ref = "firebaseBom" }
 firebase-analytics = { module = "com.google.firebase:firebase-analytics" }
@@ -102,7 +123,7 @@ fragment-fragment = { module = "androidx.fragment:fragment", version.ref = "frag
 fragment-ktx = { module = "androidx.fragment:fragment-ktx", version.ref = "fragment" }
 fragment-testing = { module = "androidx.fragment:fragment-testing", version.ref = "fragment" }
 
-androidx-junit = { module = "androidx.test.ext:junit", version = "1.2.1" }
+androidx-junit = { module = "androidx.test.ext:junit", version = "1.3.0" }
 
 hutool-crypto = { module = "cn.hutool:hutool-crypto", version.ref = "hutool" }
 
@@ -142,6 +163,8 @@ glide-glide = { module = "com.github.bumptech.glide:glide", version.ref = "glide
 glide-okhttp = { module = "com.github.bumptech.glide:okhttp3-integration", version.ref = "glide" }
 glide-recyclerview = { module = "com.github.bumptech.glide:recyclerview-integration", version.ref = "glide" }
 glide-compiler = { module = "com.github.bumptech.glide:compiler", version.ref = "glide" }
+# beta01 到 beta10 跨越多个预发布 API，需与 Compose 调用面和 Glide 版本专项联调。
+#noinspection NewerVersionAvailable
 glide-compose = { module = "com.github.bumptech.glide:compose", version = "1.0.0-beta01" }
 glide-ksp = { module = "com.github.bumptech.glide:ksp", version.ref = "glide" }
 glide-avif = { module = "com.github.bumptech.glide:avif-integration", version.ref = "glide" }
@@ -154,7 +177,7 @@ splitties-activities = { module = "com.louiscad.splitties:splitties-activities",
 splitties-systemservices = { module = "com.louiscad.splitties:splitties-systemservices", version.ref = "splitties" }
 splitties-views = { module = "com.louiscad.splitties:splitties-views", version.ref = "splitties" }
 
-androidx-runner = { module = "androidx.test:runner", version = "1.6.2" }
+androidx-runner = { module = "androidx.test:runner", version = "1.7.0" }
 androidx-swiperefreshlayout = { module = "androidx.swiperefreshlayout:swiperefreshlayout", version.ref = "swiperefreshlayout" }
 androidx-recyclerview = { module = "androidx.recyclerview:recyclerview", version.ref = "recyclerview" }
 androidx-startup-runtime = { module = "androidx.startup:startup-runtime", version.ref = "startup" }
@@ -210,11 +233,11 @@ kotlin-sam = { id = "org.jetbrains.kotlin.plugin.sam.with.receiver", version.ref
 kotlin-lombok = { id = "org.jetbrains.kotlin.plugin.lombok", version.ref = "kotlin" }
 kotlin-parcelize = { id = "org.jetbrains.kotlin.plugin.parcelize", version.ref = "kotlin" }
 
-google-services = { id = "com.google.gms.google-services", version = "4.4.2" }
+google-services = { id = "com.google.gms.google-services", version = "4.5.0" }
 
 ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }
 room = { id = "androidx.room", version.ref = "room" }
 
 #protobuf = { id = "com.google.protobuf", version = "0.9.4" }
 
-download = { id = "de.undercouch.download", version = "5.6.0" }
+download = { id = "de.undercouch.download", version = "5.7.0" }
