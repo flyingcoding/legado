@@ -1028,15 +1028,6 @@
     <string name="show_add_to_shelf_alert_summary">閱讀未放入書架的書籍在返回時提示放入書架</string>
     <string name="review">段評</string>
     <string name="rule_review_url">段評URL（reviewUrl）</string>
-    <string name="rule_avatar">段評發布者大頭貼（avatarRule）</string>
-    <string name="rule_review_content">段評內容（contentRule）</string>
-    <string name="rule_post_time">段評發布時間（postTimeRule）</string>
-    <string name="rule_review_quote">段評回復URL（reviewQuoteUrl）</string>
-    <string name="review_vote_down">點踩URL（voteDownUrl）</string>
-    <string name="review_vote_up">按讚URL（voteUpUrl）</string>
-    <string name="post_review_url">發送回復URL（postReviewUrl）</string>
-    <string name="post_quote_url">發送回復段評URL（postQuoteUrl）</string>
-    <string name="delete_review_url">刪除段評URL（deleteUrl）</string>
     <string name="tag_explore_enabled">標誌：發現已啟用</string>
     <string name="tag_explore_disabled">標誌：發現已禁用</string>
     <string name="show_read_title_addition">展示頂部工具列附加區域</string>

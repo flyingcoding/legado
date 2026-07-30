@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<resources>
+<resources xmlns:tools="http://schemas.android.com/tools">
     <!--App-->
     <string name="app_name">Legado</string>
     <string name="app_name_a">Legado·A</string>
@@ -547,6 +547,7 @@
     <string name="source_tab_info">Information</string>
     <string name="source_tab_toc">Chapters</string>
     <string name="source_tab_content">Content</string>
+    <string name="source_tab_review" tools:ignore="MissingTranslation">Comments</string>
 
     <string name="e_ink_mode">E-Ink mode</string>
     <string name="e_ink_mode_detail">Remove animations and optimize the experience of using E-paper books</string>
@@ -1035,16 +1036,54 @@
     <string name="show_add_to_shelf_alert_title">Prompt to add to bookshelf when return</string>
     <string name="show_add_to_shelf_alert_summary">Prompt to add to bookshelf when return from reading books that are not on the bookshelf</string>
     <string name="review">Review</string>
-    <string name="rule_avatar">段评发布者头像（avatarRule）</string>
-    <string name="rule_review_url">段评URL（reviewUrl）</string>
-    <string name="rule_review_content">Paragraph review content（contentRule）</string>
-    <string name="rule_post_time">Release time of paragraph comments（postTimeRule）</string>
-    <string name="rule_review_quote">Paragraph comment replied to URL（reviewQuoteUrl）</string>
-    <string name="review_vote_down">Not like URL（voteDownUrl）</string>
-    <string name="review_vote_up">Like URL（voteUpUrl）</string>
-    <string name="post_review_url">Send a reply to URL（postReviewUrl）</string>
-    <string name="post_quote_url">Send a reply paragraph comment URL（postQuoteUrl）</string>
-    <string name="delete_review_url">Delete paragraph comment URL（deleteUrl）</string>
+    <string name="review_count_description" tools:ignore="MissingTranslation">This paragraph has %1$d comments</string>
+    <string name="review_dialog_title" tools:ignore="MissingTranslation">Paragraph comments</string>
+    <string name="review_anonymous_user" tools:ignore="MissingTranslation">Anonymous user</string>
+    <string name="review_unknown_time" tools:ignore="MissingTranslation">Unknown time</string>
+    <string name="review_user_avatar" tools:ignore="MissingTranslation">User avatar</string>
+    <string name="review_like_count" tools:ignore="MissingTranslation">Likes %1$d</string>
+    <string name="review_reply_count" tools:ignore="MissingTranslation">Replies %1$d</string>
+    <string name="review_empty" tools:ignore="MissingTranslation">No comments</string>
+    <string name="review_partial_warning" tools:ignore="MissingTranslation">Some comments could not be loaded. Successful items are retained.</string>
+    <string name="review_retry_load_more" tools:ignore="MissingTranslation">Loading failed. Tap to retry.</string>
+    <string name="review_load_more_failed" tools:ignore="MissingTranslation">More comments could not be loaded.</string>
+    <string name="review_error_authentication" tools:ignore="MissingTranslation">Comment service authentication failed.</string>
+    <string name="review_error_network" tools:ignore="MissingTranslation">Network error. Tap to retry.</string>
+    <string name="review_error_protocol" tools:ignore="MissingTranslation">The comment service response is incompatible.</string>
+    <string name="review_error_generic" tools:ignore="MissingTranslation">Comments could not be loaded.</string>
+    <string name="review_replies_title" tools:ignore="MissingTranslation">Replies</string>
+    <string name="review_reply_to_user" tools:ignore="MissingTranslation">Replying to %1$s</string>
+    <string name="review_reply_empty" tools:ignore="MissingTranslation">No replies</string>
+    <!-- 段评规则只维护默认和简体中文资源，其余 locale 回退到默认文案。 -->
+    <string name="rule_review_contract" tools:ignore="MissingTranslation">Comment contract (contractVersion)</string>
+    <string name="rule_review_index_url" tools:ignore="MissingTranslation">Comment index URL (reviewIndexUrl)</string>
+    <string name="rule_review_url">Comment page URL (reviewUrl)</string>
+    <string name="rule_review_quote_url" tools:ignore="MissingTranslation">Reply page URL (reviewQuoteUrl)</string>
+    <string name="rule_paragraph_list" tools:ignore="MissingTranslation">Paragraph list rule (paragraphListRule)</string>
+    <string name="rule_paragraph_id" tools:ignore="MissingTranslation">Paragraph ID rule (paragraphIdRule)</string>
+    <string name="rule_paragraph_count" tools:ignore="MissingTranslation">Paragraph comment count rule (paragraphCountRule)</string>
+    <string name="rule_comment_list" tools:ignore="MissingTranslation">Comment list rule (commentListRule)</string>
+    <string name="rule_comment_id" tools:ignore="MissingTranslation">Comment ID rule (commentIdRule)</string>
+    <string name="rule_comment_user_id" tools:ignore="MissingTranslation">Comment user ID rule, optional (userIdRule)</string>
+    <string name="rule_comment_user_name" tools:ignore="MissingTranslation">Comment user name rule, optional (userNameRule)</string>
+    <string name="rule_comment_avatar" tools:ignore="MissingTranslation">Comment avatar rule, optional (avatarRule)</string>
+    <string name="rule_comment_content" tools:ignore="MissingTranslation">Comment content rule (contentRule)</string>
+    <string name="rule_comment_post_time" tools:ignore="MissingTranslation">Comment post time rule (postTimeRule)</string>
+    <string name="rule_comment_vote_up_count" tools:ignore="MissingTranslation">Comment like count rule (voteUpCountRule)</string>
+    <string name="rule_comment_quote_count" tools:ignore="MissingTranslation">Comment reply count rule (quoteCountRule)</string>
+    <string name="rule_review_has_more" tools:ignore="MissingTranslation">Pagination has-more rule (hasMoreRule)</string>
+    <string name="rule_review_next_cursor" tools:ignore="MissingTranslation">Pagination cursor rule (nextCursorRule)</string>
+    <string name="rule_quote_list" tools:ignore="MissingTranslation">Reply list rule (quoteListRule)</string>
+    <string name="rule_quote_id" tools:ignore="MissingTranslation">Reply ID rule (quoteIdRule)</string>
+    <string name="rule_quote_parent_id" tools:ignore="MissingTranslation">Parent reply ID rule, optional (quoteParentIdRule)</string>
+    <string name="rule_quote_user_id" tools:ignore="MissingTranslation">Reply user ID rule, optional (quoteUserIdRule)</string>
+    <string name="rule_quote_user_name" tools:ignore="MissingTranslation">Reply user name rule, optional (quoteUserNameRule)</string>
+    <string name="rule_quote_avatar" tools:ignore="MissingTranslation">Reply avatar rule, optional (quoteAvatarRule)</string>
+    <string name="rule_quote_content" tools:ignore="MissingTranslation">Reply content rule (quoteContentRule)</string>
+    <string name="rule_quote_post_time" tools:ignore="MissingTranslation">Reply post time rule (quotePostTimeRule)</string>
+    <string name="rule_quote_vote_up_count" tools:ignore="MissingTranslation">Reply like count rule (quoteVoteUpCountRule)</string>
+    <string name="rule_quote_children" tools:ignore="MissingTranslation">Nested replies rule, optional (quoteChildrenRule)</string>
+    <string name="rule_review_invalid" tools:ignore="MissingTranslation">Complete all required fanqie.paragraph-comments.v1 comment rules before saving</string>
     <string name="tag_explore_enabled">Flag: found enabled</string>
     <string name="tag_explore_disabled">Flag: found disabled</string>
     <string name="show_read_title_addition">show read title addition area</string>

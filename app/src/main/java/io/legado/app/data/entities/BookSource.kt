@@ -148,12 +148,8 @@ data class BookSource(
         return rule
     }
 
-//    fun getReviewRule(): ReviewRule {
-//        ruleReview?.let { return it }
-//        val rule = ReviewRule()
-//        ruleReview = rule
-//        return rule
-//    }
+    /** 获取段评规则；未配置时返回不写回实体的空规则供编辑器展示。 */
+    fun getReviewRule(): ReviewRule = ruleReview ?: ReviewRule()
 
     fun getDisPlayNameGroup(): String {
         return if (bookSourceGroup.isNullOrBlank()) {
@@ -254,6 +250,7 @@ data class BookSource(
                 && getBookInfoRule() == source.getBookInfoRule()
                 && getTocRule() == source.getTocRule()
                 && getContentRule() == source.getContentRule()
+                && ruleReview == source.ruleReview
     }
 
     private fun equal(a: String?, b: String?) = a == b || (a.isNullOrEmpty() && b.isNullOrEmpty())
@@ -300,11 +297,15 @@ data class BookSource(
         fun stringToContentRule(json: String?) =
             GSON.fromJsonObject<ContentRule>(json).getOrNull()
 
+        /** 从现有 Room 文本列安全恢复段评规则，畸形 JSON 降级为 null。 */
         @TypeConverter
-        fun stringToReviewRule(json: String?): ReviewRule? = null
+        fun stringToReviewRule(json: String?): ReviewRule? =
+            GSON.fromJsonObject<ReviewRule>(json).getOrNull()
 
+        /** 把可选段评规则写回现有 Room 文本列。 */
         @TypeConverter
-        fun reviewRuleToString(reviewRule: ReviewRule?): String = "null"
+        fun reviewRuleToString(reviewRule: ReviewRule?): String =
+            GSON.toJson(reviewRule)
 
     }
 }
