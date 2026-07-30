@@ -32,6 +32,7 @@ desugar = "2.1.5"
 #kotlinxSerialization = "1.8.0"
 swiperefreshlayout = "1.2.0"
 collection = "1.5.0"
+startup = "1.2.0"
 
 zxingLite = "3.3.0"
 
@@ -156,6 +157,7 @@ splitties-views = { module = "com.louiscad.splitties:splitties-views", version.r
 androidx-runner = { module = "androidx.test:runner", version = "1.6.2" }
 androidx-swiperefreshlayout = { module = "androidx.swiperefreshlayout:swiperefreshlayout", version.ref = "swiperefreshlayout" }
 androidx-recyclerview = { module = "androidx.recyclerview:recyclerview", version.ref = "recyclerview" }
+androidx-startup-runtime = { module = "androidx.startup:startup-runtime", version.ref = "startup" }
 androidx-viewpager2 = { module = "androidx.viewpager2:viewpager2", version.ref = "viewpager2" }
 androidx-webkit = { module = "androidx.webkit:webkit", version.ref = "webkit" }
 androidx-documentfile = { module = "androidx.documentfile:documentfile", version.ref = "documentfile" }

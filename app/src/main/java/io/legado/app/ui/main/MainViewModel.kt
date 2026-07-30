@@ -49,7 +49,7 @@ class MainViewModel(application: Application) : BaseViewModel(application) {
     private var poolSize = min(threadCount, AppConst.MAX_THREAD)
     private var upTocPool = Executors.newFixedThreadPool(poolSize).asCoroutineDispatcher()
     private val waitUpTocBooks = LinkedList<String>()
-    private val onUpTocBooks = ConcurrentHashMap.newKeySet<String>()
+    private val onUpTocBooks: MutableSet<String> = ConcurrentHashMap.newKeySet()
     val onUpBooksLiveData = MutableLiveData<Int>()
     private var upTocJob: Job? = null
     private var cacheBookJob: Job? = null

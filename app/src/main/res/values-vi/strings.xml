@@ -37,6 +37,7 @@
     <string name="delete">Xóa</string>
     <string name="delete_select_group">Xóa nhóm đã chọn</string>
     <string name="delete_all">Xóa tất cả</string>
+    <string name="custom_export_section">Tùy chỉnh chương xuất EPUB</string>
     <string name="replace">Thay thế</string>
     <string name="replace_purify">Thay thế và lọc</string>
     <string name="replace_purify_desc">Cấu hình quy tắc thay thế</string>
@@ -249,6 +250,7 @@
     <string name="find_on_www">Khám phá</string>
     <string name="find_source_manage">Quản lý khám phá</string>
     <string name="find_empty">Không có nội dung. Hãy vào Quản lý nguồn để thêm!</string>
+    <string name="del_all">Xóa tất cả</string>
     <string name="searchHistory">Lịch sử tìm kiếm</string>
     <string name="clear">Xóa</string>
     <string name="showTitle">Hiển thị tiêu đề sách trong văn bản</string>
@@ -1201,6 +1203,9 @@
     <string name="hide_manga_title">Ẩn tiêu đề danh sách manga</string>
     <string name="refresh_explore">Làm mới khám phá</string>
     <string name="padding_display_cutouts">Đệm các phần cắt hiển thị</string>
+    <string name="system_media_control_compatibility_change">Thay đổi khả năng tương thích với điều khiển phương tiện hệ thống</string>
+    <string name="system_media_control_compatibility_change_summary">Nếu các điều khiển phương tiện hệ thống không xuất hiện trên màn hình khóa, hãy thử bật tùy chọn này, ví dụ trên thiết bị chạy One UI 7.0 hoặc thiết bị Vivo.</string>
+    <string name="read_aloud_pause_resume">Tạm dừng/Tiếp tục đọc</string>
     <string name="manga_epaper">Màn hình mực</string>
     <string name="manga_epaper_stting">Cài đặt màn hình mực</string>
     <string name="manga_epaper_value">Ngưỡng</string>
