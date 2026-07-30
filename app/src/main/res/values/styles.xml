@@ -19,9 +19,6 @@
     </style>
 
     <!-- Welcome主题 -->
-    <style name="AppTheme.Welcome" parent="Base.AppTheme">
-        <item name="android:windowNoTitle">true</item>
-    </style>
 
     <!-- Base application theme. -->
     <style name="Base.AppTheme" parent="Theme.AppCompat.DayNight.NoActionBar">
@@ -52,13 +49,7 @@
 
     //**********System Style******************//
 
-    <style name="Style.NavigationView" parent="android:Widget">
-        <item name="android:listPreferredItemHeightSmall">44dp</item>
-    </style>
 
-    <style name="Style.Toolbar.NoPadding" parent="Base.Widget.AppCompat.Toolbar">
-        <item name="contentInsetStartWithNavigation">0dp</item>
-    </style>
 
     <style name="Style.MenuItemText" parent="@android:style/TextAppearance.Widget.IconMenu.Item">
         <item name="android:textColor">@color/menu_color_default</item>
@@ -84,24 +75,9 @@
 
     //*******************Widget Style**********************************//
 
-    <style name="Style.Shadow.Top" parent="android:Widget">
-        <item name="android:layout_width">match_parent</item>
-        <item name="android:layout_height">@dimen/shadow_height</item>
-        <item name="android:background">@drawable/bg_shadow_top</item>
-    </style>
-
-    <style name="Style.Shadow.Bottom" parent="android:Widget">
-        <item name="android:layout_width">match_parent</item>
-        <item name="android:layout_height">@dimen/shadow_height</item>
-        <item name="android:background">@drawable/bg_shadow_bottom</item>
-    </style>
 
 
-    <style name="Style.Line" parent="android:Widget">
-        <item name="android:layout_width">match_parent</item>
-        <item name="android:layout_height">0.5dp</item>
-        <item name="android:background">@color/divider</item>
-    </style>
+
 
     <style name="Style.Text.Primary.Normal" parent="android:Widget">
         <item name="android:layout_width">match_parent</item>
@@ -111,9 +87,6 @@
         <item name="android:includeFontPadding">false</item>
     </style>
 
-    <style name="Style.Text.Primary.Normal.Wrap">
-        <item name="android:layout_width">wrap_content</item>
-    </style>
 
     <style name="Style.Text.Second.Normal" parent="android:Widget">
         <item name="android:layout_width">match_parent</item>
