@@ -15,7 +15,6 @@ import io.legado.app.ui.book.read.page.entities.TextLine
 import io.legado.app.ui.book.read.page.entities.TextPage
 import io.legado.app.ui.book.read.page.entities.TextPos
 import io.legado.app.ui.book.read.page.entities.column.BaseColumn
-import io.legado.app.ui.book.read.page.entities.column.ButtonColumn
 import io.legado.app.ui.book.read.page.entities.column.ImageColumn
 import io.legado.app.ui.book.read.page.entities.column.ReviewColumn
 import io.legado.app.ui.book.read.page.entities.column.TextColumn
@@ -26,7 +25,6 @@ import io.legado.app.utils.activity
 import io.legado.app.utils.dpToPx
 import io.legado.app.utils.getCompatColor
 import io.legado.app.utils.showDialogFragment
-import io.legado.app.utils.toastOnUi
 import java.util.concurrent.Executors
 import kotlin.math.max
 import kotlin.math.min
@@ -234,13 +232,9 @@ class ContentTextView(context: Context, attrs: AttributeSet?) : View(context, at
         var handled = false
         touch(x, y) { _, textPos, textPage, textLine, column ->
             when (column) {
-                is ButtonColumn -> {
-                    context.toastOnUi("Button Pressed!")
-                    handled = true
-                }
-
                 is ReviewColumn -> {
-                    context.toastOnUi("Button Pressed!")
+                    contentDescription = column.accessibilityDescription(context)
+                    callBack.onReviewClick(column.paraId, column.generation)
                     handled = true
                 }
 
@@ -711,6 +705,9 @@ class ContentTextView(context: Context, attrs: AttributeSet?) : View(context, at
         fun upSelectedStart(x: Float, y: Float, top: Float)
         fun upSelectedEnd(x: Float, y: Float)
         fun onImageLongPress(x: Float, y: Float, src: String)
+
+        /** 上报携带段落身份和 generation 的只读评论气泡点击。 */
+        fun onReviewClick(paraId: Int, generation: Long)
         fun onCancelSelect()
         fun onLongScreenshotTouchEvent(event: MotionEvent): Boolean
     }

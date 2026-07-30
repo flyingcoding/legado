@@ -3,7 +3,9 @@ package io.legado.app.ui.book.read.page.entities.column
 import android.graphics.Canvas
 import android.graphics.Paint
 import android.graphics.Path
+import android.content.Context
 import androidx.annotation.Keep
+import io.legado.app.R
 import io.legado.app.ui.book.read.page.ContentTextView
 import io.legado.app.ui.book.read.page.entities.TextLine
 import io.legado.app.ui.book.read.page.entities.TextLine.Companion.emptyTextLine
@@ -16,7 +18,9 @@ import io.legado.app.ui.book.read.page.provider.ChapterProvider
 data class ReviewColumn(
     override var start: Float,
     override var end: Float,
-    val count: Int = 0
+    val paraId: Int,
+    val count: Int,
+    val generation: Long,
 ) : BaseColumn {
 
     override var textLine: TextLine = emptyTextLine
@@ -30,11 +34,12 @@ data class ReviewColumn(
     }
 
     val countText by lazy {
-        if (count > 999) {
-            return@lazy "999"
-        }
-        return@lazy count.toString()
+        formatParagraphReviewCount(count)
     }
+
+    /** 返回供 TalkBack 使用的真实评论计数描述。 */
+    fun accessibilityDescription(context: Context): String =
+        context.getString(R.string.review_count_description, count)
 
     val path by lazy { Path() }
 
@@ -63,3 +68,7 @@ data class ReviewColumn(
 
 
 }
+
+/** 把真实段评计数格式化为阅读气泡的有界文本。 */
+fun formatParagraphReviewCount(count: Int): String =
+    if (count > 999) "999+" else count.toString()

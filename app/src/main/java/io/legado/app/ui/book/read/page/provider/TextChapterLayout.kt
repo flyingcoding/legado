@@ -12,15 +12,17 @@ import io.legado.app.data.entities.BookChapter
 import io.legado.app.help.book.BookContent
 import io.legado.app.help.book.BookHelp
 import io.legado.app.help.book.getBookSource
-import io.legado.app.help.config.AppConfig
 import io.legado.app.help.config.ReadBookConfig
 import io.legado.app.help.coroutine.Coroutine
 import io.legado.app.model.ImageProvider
 import io.legado.app.model.ReadBook
+import io.legado.app.model.review.ParagraphReviewLayoutEntry
+import io.legado.app.model.review.appendParagraphReviewMarker
 import io.legado.app.ui.book.read.page.entities.TextChapter
 import io.legado.app.ui.book.read.page.entities.TextLine
 import io.legado.app.ui.book.read.page.entities.TextPage
 import io.legado.app.ui.book.read.page.entities.column.ImageColumn
+import io.legado.app.ui.book.read.page.entities.column.ReviewColumn
 import io.legado.app.ui.book.read.page.entities.column.TextColumn
 import io.legado.app.utils.dpToPx
 import io.legado.app.utils.fastSum
@@ -90,6 +92,7 @@ class TextChapterLayout(
     private var floatArray = FloatArray(128)
 
     private var isCompleted = false
+    private var paragraphReviewEntry: ParagraphReviewLayoutEntry? = null
     private val job: Coroutine<*>
 
     var exception: Throwable? = null
@@ -208,7 +211,7 @@ class TextChapterLayout(
             displayTitle.splitNotBlank("\n").forEach { text ->
                 setTypeText(
                     book,
-                    if (AppConfig.enableReview) text + ChapterProvider.reviewChar else text,
+                    text,
                     titlePaint,
                     titlePaintTextHeight,
                     titlePaintFontMetrics,
@@ -230,8 +233,9 @@ class TextChapterLayout(
 
         val sb = StringBuffer()
         var isSetTypedImage = false
-        contents.forEach { content ->
+        contents.forEachIndexed { localParagraphIndex, content ->
             currentCoroutineContext().ensureActive()
+            paragraphReviewEntry = textChapter.reviewLayoutData.entryFor(localParagraphIndex)
             if (isTextImageStyle) {
                 //图片样式为文字嵌入类型
                 var text = content.replace(ChapterProvider.srcReplaceChar, "▣")
@@ -245,7 +249,11 @@ class TextChapterLayout(
                     }
                 }
                 matcher.appendTail(sb)
-                text = sb.toString()
+                text = appendParagraphReviewMarker(
+                    sb.toString(),
+                    paragraphReviewEntry,
+                    ChapterProvider.reviewChar,
+                )
                 setTypeText(
                     book,
                     text,
@@ -296,7 +304,11 @@ class TextChapterLayout(
                     if (text.isNotBlank()) {
                         setTypeText(
                             book,
-                            if (AppConfig.enableReview) text + ChapterProvider.reviewChar else text,
+                            appendParagraphReviewMarker(
+                                text,
+                                paragraphReviewEntry,
+                                ChapterProvider.reviewChar,
+                            ),
                             contentPaint,
                             contentPaintTextHeight,
                             contentPaintFontMetrics,
@@ -308,6 +320,7 @@ class TextChapterLayout(
             }
             pendingTextPage.lines.last().isParagraphEnd = true
             stringBuilder.append("\n")
+            paragraphReviewEntry = null
         }
         val textPage = pendingTextPage
         val endPadding = 20.dpToPx()
@@ -718,13 +731,16 @@ class TextChapterLayout(
                 )
             }
 
-//            isLineEnd && char == ChapterProvider.reviewChar -> {
-//                ReviewColumn(
-//                    start = absStartX + xStart,
-//                    end = absStartX + xEnd,
-//                    count = 100
-//                )
-//            }
+            isLineEnd && char == ChapterProvider.reviewChar && paragraphReviewEntry != null -> {
+                val entry = paragraphReviewEntry!!
+                ReviewColumn(
+                    start = absStartX + xStart,
+                    end = absStartX + xEnd,
+                    paraId = entry.paraId,
+                    count = entry.count,
+                    generation = entry.generation,
+                )
+            }
 
             else -> {
                 TextColumn(

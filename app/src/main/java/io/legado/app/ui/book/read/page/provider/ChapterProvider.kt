@@ -19,6 +19,9 @@ import io.legado.app.help.config.AppConfig
 import io.legado.app.help.config.ReadBookConfig
 import io.legado.app.model.ImageProvider
 import io.legado.app.model.ReadBook
+import io.legado.app.model.review.paragraphReviewContentHash
+import io.legado.app.model.review.ParagraphReviewLayoutEntry
+import io.legado.app.model.review.appendParagraphReviewMarker
 import io.legado.app.ui.book.read.page.entities.TextChapter
 import io.legado.app.ui.book.read.page.entities.TextLine
 import io.legado.app.ui.book.read.page.entities.TextPage
@@ -178,7 +181,7 @@ object ChapterProvider {
             displayTitle.splitNotBlank("\n").forEach { text ->
                 setTypeText(
                     book, absStartX, durY,
-                    if (AppConfig.enableReview) text + reviewChar else text,
+                    text,
                     textPages,
                     stringBuilder,
                     titlePaint,
@@ -196,7 +199,9 @@ object ChapterProvider {
             stringBuilder.append("\n")
             durY += titleBottomSpacing
         }
-        contents.forEach { content ->
+        contents.forEachIndexed { localParagraphIndex, content ->
+            val paragraphReviewEntry = bookContent.paragraphReviewLayoutData
+                .entryFor(localParagraphIndex)
             if (book.getImageStyle().equals(Book.imgStyleText, true)) {
                 //图片样式为文字嵌入类型
                 var text = content.replace(srcReplaceChar, "▣")
@@ -210,7 +215,7 @@ object ChapterProvider {
                     }
                 }
                 matcher.appendTail(sb)
-                text = sb.toString()
+                text = appendParagraphReviewMarker(sb.toString(), paragraphReviewEntry, reviewChar)
                 setTypeText(
                     book,
                     absStartX,
@@ -221,7 +226,8 @@ object ChapterProvider {
                     contentPaint,
                     contentPaintTextHeight,
                     contentPaintFontMetrics,
-                    srcList = srcList
+                    srcList = srcList,
+                    paragraphReviewEntry = paragraphReviewEntry,
                 ).let {
                     absStartX = it.first
                     durY = it.second
@@ -267,12 +273,13 @@ object ChapterProvider {
                     if (text.isNotBlank()) {
                         setTypeText(
                             book, absStartX, durY,
-                            if (AppConfig.enableReview) text + reviewChar else text,
+                            appendParagraphReviewMarker(text, paragraphReviewEntry, reviewChar),
                             textPages,
                             stringBuilder,
                             contentPaint,
                             contentPaintTextHeight,
-                            contentPaintFontMetrics
+                            contentPaintFontMetrics,
+                            paragraphReviewEntry = paragraphReviewEntry,
                         ).let {
                             absStartX = it.first
                             durY = it.second
@@ -311,7 +318,10 @@ object ChapterProvider {
             bookContent.sameTitleRemoved,
             bookChapter.isVip,
             bookChapter.isPay,
-            bookContent.effectiveReplaceRules
+            bookContent.effectiveReplaceRules,
+            paragraphReviewContentHash(bookContent.textList),
+            bookContent.textList.size,
+            bookContent.paragraphReviewLayoutData,
         )
     }
 
@@ -331,7 +341,10 @@ object ChapterProvider {
             bookContent.sameTitleRemoved,
             bookChapter.isVip,
             bookChapter.isPay,
-            bookContent.effectiveReplaceRules
+            bookContent.effectiveReplaceRules,
+            paragraphReviewContentHash(bookContent.textList),
+            bookContent.textList.size,
+            bookContent.paragraphReviewLayoutData,
         ).apply {
             createLayout(scope, book, bookContent)
         }
@@ -478,7 +491,8 @@ object ChapterProvider {
         isTitle: Boolean = false,
         emptyContent: Boolean = false,
         isVolumeTitle: Boolean = false,
-        srcList: LinkedList<String>? = null
+        srcList: LinkedList<String>? = null,
+        paragraphReviewEntry: ParagraphReviewLayoutEntry? = null,
     ): Pair<Int, Float> {
         var absStartX = x
         val layout = if (ReadBookConfig.useZhLayout) {
@@ -551,7 +565,7 @@ object ChapterProvider {
                     textLine.text = lineText
                     addCharsToLineFirst(
                         book, absStartX, textLine, words,
-                        desiredWidth, widths, srcList
+                        desiredWidth, widths, srcList, paragraphReviewEntry
                     )
                 }
 
@@ -569,7 +583,8 @@ object ChapterProvider {
                     }
                     addCharsToLineNatural(
                         book, absStartX, textLine, words,
-                        startX, !isTitle && lineIndex == 0, widths, srcList
+                        startX, !isTitle && lineIndex == 0, widths, srcList,
+                        paragraphReviewEntry
                     )
                 }
 
@@ -582,14 +597,14 @@ object ChapterProvider {
                         val startX = (visibleWidth - desiredWidth) / 2
                         addCharsToLineNatural(
                             book, absStartX, textLine, words,
-                            startX, false, widths, srcList
+                            startX, false, widths, srcList, paragraphReviewEntry
                         )
                     } else {
                         //中间行
                         textLine.text = lineText
                         addCharsToLineMiddle(
                             book, absStartX, textLine, words,
-                            desiredWidth, 0f, widths, srcList
+                            desiredWidth, 0f, widths, srcList, paragraphReviewEntry
                         )
                     }
                 }
@@ -644,13 +659,14 @@ object ChapterProvider {
         /**自然排版长度**/
         desiredWidth: Float,
         textWidths: List<Float>,
-        srcList: LinkedList<String>?
+        srcList: LinkedList<String>?,
+        paragraphReviewEntry: ParagraphReviewLayoutEntry?,
     ) {
         var x = 0f
         if (!ReadBookConfig.textFullJustify) {
             addCharsToLineNatural(
                 book, absStartX, textLine, words,
-                x, true, textWidths, srcList
+                x, true, textWidths, srcList, paragraphReviewEntry
             )
             return
         }
@@ -672,7 +688,7 @@ object ChapterProvider {
             val textWidths1 = textWidths.subList(bodyIndent.length, textWidths.size)
             addCharsToLineMiddle(
                 book, absStartX, textLine, text1,
-                desiredWidth, x, textWidths1, srcList
+                desiredWidth, x, textWidths1, srcList, paragraphReviewEntry
             )
         }
     }
@@ -690,12 +706,13 @@ object ChapterProvider {
         /**起始x坐标**/
         startX: Float,
         textWidths: List<Float>,
-        srcList: LinkedList<String>?
+        srcList: LinkedList<String>?,
+        paragraphReviewEntry: ParagraphReviewLayoutEntry?,
     ) {
         if (!ReadBookConfig.textFullJustify) {
             addCharsToLineNatural(
                 book, absStartX, textLine, words,
-                startX, false, textWidths, srcList
+                startX, false, textWidths, srcList, paragraphReviewEntry
             )
             return
         }
@@ -714,7 +731,7 @@ object ChapterProvider {
                 }
                 addCharToLine(
                     book, absStartX, textLine, char,
-                    x, x1, index + 1 == words.size, srcList
+                    x, x1, index + 1 == words.size, srcList, paragraphReviewEntry
                 )
                 x = x1
             }
@@ -728,7 +745,7 @@ object ChapterProvider {
                 val x1 = if (index != words.lastIndex) (x + cw + d) else (x + cw)
                 addCharToLine(
                     book, absStartX, textLine, char,
-                    x, x1, index + 1 == words.size, srcList
+                    x, x1, index + 1 == words.size, srcList, paragraphReviewEntry
                 )
                 x = x1
             }
@@ -747,7 +764,8 @@ object ChapterProvider {
         startX: Float,
         hasIndent: Boolean,
         textWidths: List<Float>,
-        srcList: LinkedList<String>?
+        srcList: LinkedList<String>?,
+        paragraphReviewEntry: ParagraphReviewLayoutEntry?,
     ) {
         val indentLength = ReadBookConfig.paragraphIndent.length
         var x = startX
@@ -755,7 +773,10 @@ object ChapterProvider {
             val char = words[index]
             val cw = textWidths[index]
             val x1 = x + cw
-            addCharToLine(book, absStartX, textLine, char, x, x1, index + 1 == words.size, srcList)
+            addCharToLine(
+                book, absStartX, textLine, char, x, x1,
+                index + 1 == words.size, srcList, paragraphReviewEntry
+            )
             x = x1
             if (hasIndent && index == indentLength - 1) {
                 textLine.indentWidth = x
@@ -775,7 +796,8 @@ object ChapterProvider {
         xStart: Float,
         xEnd: Float,
         isLineEnd: Boolean,
-        srcList: LinkedList<String>?
+        srcList: LinkedList<String>?,
+        paragraphReviewEntry: ParagraphReviewLayoutEntry?,
     ) {
         val column = when {
             srcList != null && char == srcReplaceChar -> {
@@ -788,11 +810,13 @@ object ChapterProvider {
                 )
             }
 
-            isLineEnd && char == reviewChar -> {
+            isLineEnd && char == reviewChar && paragraphReviewEntry != null -> {
                 ReviewColumn(
                     start = absStartX + xStart,
                     end = absStartX + xEnd,
-                    count = 100
+                    paraId = paragraphReviewEntry.paraId,
+                    count = paragraphReviewEntry.count,
+                    generation = paragraphReviewEntry.generation,
                 )
             }
 

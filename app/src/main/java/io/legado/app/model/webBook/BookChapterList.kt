@@ -16,6 +16,8 @@ import io.legado.app.help.book.simulatedTotalChapterNum
 import io.legado.app.help.config.AppConfig
 import io.legado.app.model.Debug
 import io.legado.app.model.analyzeRule.AnalyzeRule
+import io.legado.app.model.review.reviewIdentityOrNull
+import io.legado.app.model.review.supportsParagraphCommentsV1
 import io.legado.app.model.analyzeRule.AnalyzeRule.Companion.setChapter
 import io.legado.app.model.analyzeRule.AnalyzeRule.Companion.setCoroutineContext
 import io.legado.app.model.analyzeRule.AnalyzeUrl
@@ -221,6 +223,9 @@ object BookChapterList {
                 analyzeRule.setChapter(bookChapter)
                 bookChapter.title = analyzeRule.getString(nameRule)
                 bookChapter.url = analyzeRule.getString(urlRule)
+                if (bookSource.supportsParagraphCommentsV1()) {
+                    bookChapter.reviewIdentityOrNull()
+                }
                 bookChapter.tag = analyzeRule.getString(upTimeRule)
                 val isVolume = analyzeRule.getString(isVolumeRule)
                 bookChapter.isVolume = false

@@ -59,6 +59,13 @@ import io.legado.app.lib.dialogs.selector
 import io.legado.app.lib.theme.accentColor
 import io.legado.app.model.ReadAloud
 import io.legado.app.model.ReadBook
+import io.legado.app.model.review.ParagraphReviewReaderController
+import io.legado.app.model.review.ParagraphReviewLayoutData
+import io.legado.app.model.review.ParagraphReviewMappingResult
+import io.legado.app.model.review.ReviewIndexLoadState
+import io.legado.app.model.review.reviewIdentityOrNull
+import io.legado.app.model.review.isParagraphReviewEffective
+import io.legado.app.model.review.supportsParagraphCommentsV1
 import io.legado.app.model.analyzeRule.AnalyzeRule
 import io.legado.app.model.analyzeRule.AnalyzeRule.Companion.setChapter
 import io.legado.app.model.analyzeRule.AnalyzeRule.Companion.setCoroutineContext
@@ -86,6 +93,8 @@ import io.legado.app.ui.book.read.page.entities.PageDirection
 import io.legado.app.ui.book.read.page.entities.TextPage
 import io.legado.app.ui.book.read.page.provider.ChapterProvider
 import io.legado.app.ui.book.read.page.provider.LayoutProgressListener
+import io.legado.app.ui.book.read.review.ParagraphReviewDialog
+import io.legado.app.ui.book.read.review.ParagraphReviewViewModel
 import io.legado.app.ui.book.searchContent.SearchContentActivity
 import io.legado.app.ui.book.searchContent.SearchResult
 import io.legado.app.ui.book.source.edit.BookSourceEditActivity
@@ -153,7 +162,8 @@ class ReadBookActivity : BaseReadBookActivity(),
     AutoReadDialog.CallBack,
     TxtTocRuleDialog.CallBack,
     ColorPickerDialogListener,
-    LayoutProgressListener {
+    LayoutProgressListener,
+    ParagraphReviewDialog.GenerationOwner {
 
     private val tocActivity =
         registerForActivityResult(TocActivityResult()) {
@@ -254,6 +264,31 @@ class ReadBookActivity : BaseReadBookActivity(),
     }
     private var justInitData: Boolean = false
     private var syncDialog: AlertDialog? = null
+    private var paragraphReviewRefreshPending = false
+    private val paragraphReviewReader by lazy {
+        ParagraphReviewReaderController(lifecycleScope) { state ->
+            val generation = state.generation
+            if (generation == null) {
+                runOnUiThread {
+                    dismissDialogFragment<ParagraphReviewDialog>()
+                }
+            }
+            val layoutData = if (generation == null) {
+                ParagraphReviewLayoutData.EMPTY
+            } else {
+                ParagraphReviewLayoutData.fromVerified(generation, state.mapping)
+            }
+            if (generation != null) {
+                runOnUiThread {
+                    if (layoutData.entries.isNotEmpty()) {
+                        ReadBook.applyParagraphReviewLayoutData(layoutData)
+                    } else {
+                        ReadBook.clearParagraphReviewLayoutData(generation.chapterIndex)
+                    }
+                }
+            }
+        }
+    }
 
     @SuppressLint("ClickableViewAccessibility")
     override fun onActivityCreated(savedInstanceState: Bundle?) {
@@ -428,10 +463,10 @@ class ReadBookActivity : BaseReadBookActivity(),
                 else -> when (item.itemId) {
                     R.id.menu_enable_replace -> item.isChecked = book.getUseReplaceRule()
                     R.id.menu_re_segment -> item.isChecked = book.getReSegment()
-//                    R.id.menu_enable_review -> {
-//                        item.isVisible = BuildConfig.DEBUG
-//                        item.isChecked = AppConfig.enableReview
-//                    }
+                    R.id.menu_enable_review -> {
+                        item.isVisible = onLine && ReadBook.bookSource.supportsParagraphCommentsV1()
+                        item.isChecked = AppConfig.enableReview
+                    }
 
                     R.id.menu_reverse_content -> item.isVisible = onLine
                     R.id.menu_del_ruby_tag -> item.isChecked = book.getDelTag(Book.rubyTag)
@@ -475,6 +510,8 @@ class ReadBookActivity : BaseReadBookActivity(),
 
             R.id.menu_refresh,
             R.id.menu_refresh_dur -> {
+                paragraphReviewRefreshPending = true
+                paragraphReviewReader.disable()
                 if (ReadBook.bookSource == null) {
                     upContent()
                 } else {
@@ -487,6 +524,8 @@ class ReadBookActivity : BaseReadBookActivity(),
             }
 
             R.id.menu_refresh_after -> {
+                paragraphReviewRefreshPending = true
+                paragraphReviewReader.disable()
                 if (ReadBook.bookSource == null) {
                     upContent()
                 } else {
@@ -499,6 +538,8 @@ class ReadBookActivity : BaseReadBookActivity(),
             }
 
             R.id.menu_refresh_all -> {
+                paragraphReviewRefreshPending = true
+                paragraphReviewReader.disable()
                 if (ReadBook.bookSource == null) {
                     upContent()
                 } else {
@@ -530,11 +571,16 @@ class ReadBookActivity : BaseReadBookActivity(),
                 ReadBook.loadContent(false)
             }
 
-//            R.id.menu_enable_review -> {
-//                AppConfig.enableReview = !AppConfig.enableReview
-//                item.isChecked = AppConfig.enableReview
-//                ReadBook.loadContent(false)
-//            }
+            R.id.menu_enable_review -> {
+                AppConfig.enableReview = !AppConfig.enableReview
+                item.isChecked = AppConfig.enableReview
+                if (!AppConfig.enableReview) {
+                    paragraphReviewReader.disable()
+                }
+                ReadBook.clearTextChapter()
+                binding.readView.upContent()
+                ReadBook.loadContent(false)
+            }
 
             R.id.menu_del_ruby_tag -> ReadBook.book?.let {
                 item.isChecked = !item.isChecked
@@ -977,6 +1023,7 @@ class ReadBookActivity : BaseReadBookActivity(),
         handler.post {
             upMenu()
             binding.readMenu.upBookView()
+            syncParagraphReview()
         }
     }
 
@@ -994,6 +1041,9 @@ class ReadBookActivity : BaseReadBookActivity(),
             ReadBook.readAloud()
         }
         loadStates = true
+        val forceParagraphReviewRefresh = paragraphReviewRefreshPending
+        paragraphReviewRefreshPending = false
+        syncParagraphReview(force = forceParagraphReviewRefresh)
     }
 
     /**
@@ -1057,7 +1107,74 @@ class ReadBookActivity : BaseReadBookActivity(),
         executor.execute {
             startBackupJob()
         }
+        syncParagraphReview()
     }
+
+    /** 使用当前在线书源和完整正文元数据启动安全的段评索引加载。 */
+    private fun syncParagraphReview(force: Boolean = false) {
+        val book = ReadBook.book
+        val source = ReadBook.bookSource
+        val textChapter = ReadBook.curTextChapter
+        if (book == null || textChapter == null ||
+            textChapter.chapter.index != ReadBook.durChapterIndex ||
+            !isParagraphReviewEffective(book.isLocal, source, AppConfig.enableReview)
+        ) {
+            paragraphReviewReader.disable()
+            return
+        }
+        paragraphReviewReader.loadIndex(
+            source = source!!,
+            bookUrl = book.bookUrl,
+            chapter = textChapter.chapter,
+            contentHash = textChapter.reviewContentHash,
+            localParagraphCount = textChapter.reviewLocalParagraphCount,
+            force = force,
+        )
+    }
+
+    /** 在正文、章节或书源身份失效时立即取消段评工作。 */
+    override fun paragraphReviewInvalidated() {
+        dismissDialogFragment<ParagraphReviewDialog>()
+        paragraphReviewReader.disable()
+    }
+
+    /** 校验当前 generation 与章节身份后处理段评气泡点击。 */
+    override fun onReviewClick(paraId: Int, generation: Long) {
+        val state = paragraphReviewReader.state
+        val currentGeneration = state.generation ?: return
+        val index = (state.indexState as? ReviewIndexLoadState.Content)?.index ?: return
+        val mapping = state.mapping as? ParagraphReviewMappingResult.Verified ?: return
+        val book = ReadBook.book ?: return
+        val source = ReadBook.bookSource ?: return
+        val textChapter = ReadBook.curTextChapter ?: return
+        val chapterIdentity = textChapter.chapter.reviewIdentityOrNull() ?: return
+        if (!paragraphReviewReader.acceptsClick(generation) ||
+            currentGeneration.sourceUrl != source.bookSourceUrl ||
+            currentGeneration.bookUrl != book.bookUrl ||
+            currentGeneration.chapterIndex != textChapter.chapter.index ||
+            currentGeneration.itemId != chapterIdentity.itemId ||
+            currentGeneration.contentHash != textChapter.reviewContentHash ||
+            mapping.mappings.none { it.paraId == paraId && it.count > 0 } ||
+            supportFragmentManager.findFragmentByTag(
+                ParagraphReviewDialog::class.simpleName
+            ) != null
+        ) {
+            return
+        }
+        showDialogFragment<ParagraphReviewDialog> {
+            putString(ParagraphReviewViewModel.ARG_SOURCE_URL, currentGeneration.sourceUrl)
+            putString(ParagraphReviewViewModel.ARG_BOOK_ID, chapterIdentity.bookId)
+            putString(ParagraphReviewViewModel.ARG_ITEM_ID, chapterIdentity.itemId)
+            putString(ParagraphReviewViewModel.ARG_ITEM_VERSION, index.itemVersion)
+            putInt(ParagraphReviewViewModel.ARG_PARA_ID, paraId)
+            putLong(ParagraphReviewViewModel.ARG_GENERATION, generation)
+            putBoolean(ParagraphReviewViewModel.ARG_PARTIAL, index.partial)
+        }
+    }
+
+    /** 判断评论 Dialog 是否仍属于阅读页当前 generation。 */
+    override fun isParagraphReviewGenerationCurrent(generation: Long): Boolean =
+        paragraphReviewReader.acceptsClick(generation)
 
     /**
      * 更新进度条位置
@@ -1617,6 +1734,7 @@ class ReadBookActivity : BaseReadBookActivity(),
         textActionMenu.dismiss()
         popupAction.dismiss()
         binding.readView.onDestroy()
+        paragraphReviewReader.close()
         ReadBook.unregister(this)
         if (!ReadBook.inBookshelf && !isChangingConfigurations) {
             viewModel.removeFromBookshelf(null)

@@ -8,6 +8,7 @@ import io.legado.app.data.entities.ReplaceRule
 import io.legado.app.help.book.BookContent
 import io.legado.app.ui.book.read.page.provider.LayoutProgressListener
 import io.legado.app.ui.book.read.page.provider.TextChapterLayout
+import io.legado.app.model.review.ParagraphReviewLayoutData
 import io.legado.app.utils.fastBinarySearchBy
 import kotlinx.coroutines.CoroutineScope
 import kotlin.math.abs
@@ -27,7 +28,10 @@ data class TextChapter(
     val isVip: Boolean,
     val isPay: Boolean,
     //起效的替换规则
-    val effectiveReplaceRules: List<ReplaceRule>?
+    val effectiveReplaceRules: List<ReplaceRule>?,
+    val reviewContentHash: String = "",
+    val reviewLocalParagraphCount: Int = 0,
+    val reviewLayoutData: ParagraphReviewLayoutData = ParagraphReviewLayoutData.EMPTY,
 ) : LayoutProgressListener {
 
     private val textPages = arrayListOf<TextPage>()

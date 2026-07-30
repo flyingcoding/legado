@@ -24,6 +24,8 @@ import io.legado.app.help.config.ReadBookConfig
 import io.legado.app.help.coroutine.Coroutine
 import io.legado.app.help.globalExecutor
 import io.legado.app.model.localBook.TextFile
+import io.legado.app.model.review.ParagraphReviewLayoutData
+import io.legado.app.model.review.paragraphReviewContentHash
 import io.legado.app.model.webBook.WebBook
 import io.legado.app.service.BaseReadAloudService
 import io.legado.app.service.CacheBookService
@@ -76,6 +78,8 @@ object ReadBook : CoroutineScope by MainScope() {
     private val loadingChapters = arrayListOf<Int>()
     private val readRecord = ReadRecord()
     private val chapterLoadingJobs = ConcurrentHashMap<Int, Coroutine<*>>()
+    private val paragraphReviewLayoutData =
+        ConcurrentHashMap<Int, ParagraphReviewLayoutData>()
     private val prevChapterLoadingLock = Mutex()
     private val curChapterLoadingLock = Mutex()
     private val nextChapterLoadingLock = Mutex()
@@ -220,10 +224,45 @@ object ReadBook : CoroutineScope by MainScope() {
     }
 
     fun clearTextChapter() {
+        paragraphReviewLayoutData.clear()
         clearExpiredChapterLoadingJob(true)
         prevTextChapter = null
         curTextChapter = null
         nextTextChapter = null
+        callBack?.paragraphReviewInvalidated()
+    }
+
+    /** 对当前章应用同正文 hash 的 Verified 布局数据并按绝对字符位置重排。 */
+    fun applyParagraphReviewLayoutData(layoutData: ParagraphReviewLayoutData): Boolean {
+        val textChapter = curTextChapter ?: return false
+        if (layoutData.entries.isEmpty() ||
+            layoutData.contentHash != textChapter.reviewContentHash ||
+            textChapter.reviewLayoutData == layoutData
+        ) {
+            return false
+        }
+        val chapterIndex = textChapter.chapter.index
+        paragraphReviewLayoutData[chapterIndex] = layoutData
+        chapterLoadingJobs.remove(chapterIndex)?.cancel()
+        removeLoading(chapterIndex)
+        textChapter.cancelLayout()
+        curTextChapter = null
+        loadContent(chapterIndex, upContent = true, resetPageOffset = false)
+        return true
+    }
+
+    /** 移除当前章失效的段评布局，并在旧气泡仍显示时按原位置重排正文。 */
+    fun clearParagraphReviewLayoutData(chapterIndex: Int = durChapterIndex): Boolean {
+        val removed = paragraphReviewLayoutData.remove(chapterIndex) != null
+        val textChapter = curTextChapter
+            ?.takeIf { it.chapter.index == chapterIndex && it.reviewLayoutData.entries.isNotEmpty() }
+            ?: return removed
+        chapterLoadingJobs.remove(chapterIndex)?.cancel()
+        removeLoading(chapterIndex)
+        textChapter.cancelLayout()
+        curTextChapter = null
+        loadContent(chapterIndex, upContent = true, resetPageOffset = false)
+        return true
     }
 
     fun clearSearchResult() {
@@ -708,6 +747,7 @@ object ReadBook : CoroutineScope by MainScope() {
             )
             val contents = contentProcessor
                 .getContent(book, chapter, content, includeTitle = false)
+                .withParagraphReviewLayoutData(chapter.index)
             ensureActive()
             val textChapter = ChapterProvider.getTextChapterAsync(
                 this, book, chapter, displayTitle, contents, simulatedChapterSize
@@ -796,6 +836,7 @@ object ReadBook : CoroutineScope by MainScope() {
             )
             val contents = contentProcessor
                 .getContent(book, chapter, content, includeTitle = false)
+                .withParagraphReviewLayoutData(chapter.index)
             val textChapter = ChapterProvider.getTextChapterAsync(
                 this@ReadBook, book, chapter, displayTitle, contents, simulatedChapterSize
             )
@@ -955,6 +996,18 @@ object ReadBook : CoroutineScope by MainScope() {
         }
     }
 
+    /** 仅在正文 hash 仍匹配时把缓存的段评布局数据附加到 BookContent。 */
+    private fun io.legado.app.help.book.BookContent.withParagraphReviewLayoutData(
+        chapterIndex: Int,
+    ): io.legado.app.help.book.BookContent {
+        val layoutData = ReadBook.paragraphReviewLayoutData[chapterIndex] ?: return this
+        if (layoutData.contentHash != paragraphReviewContentHash(textList)) {
+            ReadBook.paragraphReviewLayoutData.remove(chapterIndex, layoutData)
+            return this
+        }
+        return copy(paragraphReviewLayoutData = layoutData)
+    }
+
     fun onChapterListUpdated(newBook: Book) {
         if (newBook.isSameNameAuthor(book)) {
             book = newBook
@@ -1036,6 +1089,9 @@ object ReadBook : CoroutineScope by MainScope() {
         fun sureNewProgress(progress: BookProgress)
 
         fun cancelSelect()
+
+        /** 通知阅读页取消段评请求并使旧 generation 失效。 */
+        fun paragraphReviewInvalidated()
     }
 
 }
