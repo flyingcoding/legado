@@ -45,6 +45,8 @@
     },
     "ruleReview": {
       "contractVersion": "fanqie.paragraph-comments.v1",
+      "transportPolicy": "debug-http",
+      "paragraphMappingMode": "fanqie.paragraph-index.v1",
       "reviewIndexUrl": "/api/book/paragraph_comments?book_id={{bookId}}&item_id={{itemId}}&detail_limit=0",
       "reviewUrl": "/api/book/paragraph_comment_page?book_id={{bookId}}&item_id={{itemId}}&para_id={{paraId}}&item_version={{itemVersion}}&count={{pageSize}}&cursor={{cursor}}",
       "reviewQuoteUrl": "/api/book/paragraph_comment_replies?book_id={{bookId}}&item_id={{itemId}}&comment_id={{commentId}}&count={{pageSize}}&cursor={{cursor}}",

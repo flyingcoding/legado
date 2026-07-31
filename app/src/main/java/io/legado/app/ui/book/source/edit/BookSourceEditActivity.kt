@@ -364,6 +364,14 @@ class BookSourceEditActivity :
         reviewEntities.clear()
         reviewEntities.apply {
             add(EditEntity("contractVersion", rr.contractVersion, R.string.rule_review_contract))
+            add(EditEntity("transportPolicy", rr.transportPolicy, R.string.rule_review_transport_policy))
+            add(
+                EditEntity(
+                    "paragraphMappingMode",
+                    rr.paragraphMappingMode,
+                    R.string.rule_review_paragraph_mapping_mode
+                )
+            )
             add(EditEntity("reviewIndexUrl", rr.reviewIndexUrl, R.string.rule_review_index_url))
             add(EditEntity("reviewUrl", rr.reviewUrl, R.string.rule_review_url))
             add(EditEntity("reviewQuoteUrl", rr.reviewQuoteUrl, R.string.rule_review_quote_url))

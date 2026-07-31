@@ -806,6 +806,8 @@
     <string name="review_reply_to_user">回复 %1$s</string>
     <string name="review_reply_empty">暂无回复</string>
     <string name="rule_review_contract">段评合同版本（contractVersion）</string>
+    <string name="rule_review_transport_policy">段评传输策略（transportPolicy）</string>
+    <string name="rule_review_paragraph_mapping_mode">段落映射模式（paragraphMappingMode）</string>
     <string name="rule_review_index_url">段评索引 URL（reviewIndexUrl）</string>
     <string name="rule_review_url">段评分页 URL（reviewUrl）</string>
     <string name="rule_review_quote_url">回复分页 URL（reviewQuoteUrl）</string>

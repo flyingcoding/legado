@@ -78,6 +78,52 @@ class ParagraphReviewRepositoryTest {
         assertTrue(requestedUrl.contains("detail_limit=0"))
     }
 
+    /** 验证 repository 会把书源显式 debug-http 声明传入远程 HTTP 安全门禁。 */
+    @Test
+    fun loadIndex_allowsRemoteHttpOnlyWithExplicitDebugPolicy() = runBlocking {
+        val calls = AtomicInteger()
+        val repository = DefaultParagraphReviewRepository(
+            httpExecutor = ReviewHttpExecutor { url, _, _ ->
+                calls.incrementAndGet()
+                response(200, indexJson(), url)
+            }
+        )
+        val remoteHttpSource = source().copy(
+            bookSourceUrl = "http://remote.example.invalid",
+            ruleReview = completeRule().copy(
+                transportPolicy = ReviewRule.DEBUG_HTTP_TRANSPORT_POLICY
+            ),
+        )
+
+        val index = repository.loadIndex(
+            remoteHttpSource,
+            ReviewIndexRequest("1001", "2002"),
+        )
+
+        assertEquals("2002", index.itemId)
+        assertEquals(1, calls.get())
+    }
+
+    /** 验证远程 HTTP 缺少显式策略时在 HTTP executor 前被拒绝。 */
+    @Test
+    fun loadIndex_rejectsRemoteHttpBeforeExecutorWithoutOptIn() {
+        val calls = AtomicInteger()
+        val repository = DefaultParagraphReviewRepository(
+            httpExecutor = ReviewHttpExecutor { _, _, _ ->
+                calls.incrementAndGet()
+                response(200, indexJson())
+            }
+        )
+        val remoteHttpSource = source().copy(bookSourceUrl = "http://remote.example.invalid")
+
+        assertThrows(ReviewException.InvalidTemplate::class.java) {
+            runBlocking {
+                repository.loadIndex(remoteHttpSource, ReviewIndexRequest("1001", "2002"))
+            }
+        }
+        assertEquals(0, calls.get())
+    }
+
     /** 验证 401 无需 contract 即映射认证错误且不解析响应正文。 */
     @Test
     fun loadIndex_mapsGlobal401BeforeEnvelopeParsing() {

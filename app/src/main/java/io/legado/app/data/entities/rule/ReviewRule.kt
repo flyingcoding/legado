@@ -8,6 +8,8 @@ import kotlinx.parcelize.Parcelize
 @Parcelize
 data class ReviewRule(
     var contractVersion: String? = null,
+    var transportPolicy: String? = null,
+    var paragraphMappingMode: String? = null,
     var reviewIndexUrl: String? = null,
     var reviewUrl: String? = null,
     var reviewQuoteUrl: String? = null,
@@ -70,6 +72,8 @@ data class ReviewRule(
     companion object {
 
         const val PARAGRAPH_COMMENTS_V1_CONTRACT = "fanqie.paragraph-comments.v1"
+        const val DEBUG_HTTP_TRANSPORT_POLICY = "debug-http"
+        const val FANQIE_PARAGRAPH_INDEX_MAPPING_MODE = "fanqie.paragraph-index.v1"
 
         val jsonDeserializer = JsonDeserializer<ReviewRule?> { json, _, _ ->
             runCatching {

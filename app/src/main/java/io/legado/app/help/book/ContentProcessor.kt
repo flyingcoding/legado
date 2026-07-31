@@ -99,6 +99,8 @@ class ContentProcessor private constructor(
     ): BookContent {
         var mContent = content
         var sameTitleRemoved = false
+        var reSegmentApplied = false
+        var replacementChangedContent = false
         var effectiveReplaceRules: ArrayList<ReplaceRule>? = null
         if (content != "null") {
             //去除重复标题
@@ -130,6 +132,7 @@ class ContentProcessor private constructor(
             }
             if (reSegment && book.getReSegment()) {
                 //重新分段
+                reSegmentApplied = true
                 mContent = ContentHelp.reSegment(mContent, chapter.title)
             }
             if (chineseConvert) {
@@ -147,6 +150,7 @@ class ContentProcessor private constructor(
                 //替换
                 effectiveReplaceRules = arrayListOf()
                 mContent = mContent.lines().joinToString("\n") { it.trim() }
+                val contentBeforeReplaceRules = mContent
                 getContentReplaceRules().forEach { item ->
                     if (item.pattern.isEmpty()) {
                         return@forEach
@@ -175,6 +179,8 @@ class ContentProcessor private constructor(
                         appCtx.toastOnUi("替换净化: 规则 ${item.name}替换出错")
                     }
                 }
+                replacementChangedContent =
+                    effectiveReplaceRules.isNotEmpty() || mContent != contentBeforeReplaceRules
             }
         }
         if (includeTitle) {
@@ -200,7 +206,22 @@ class ContentProcessor private constructor(
                 }
             }
         }
-        return BookContent(sameTitleRemoved, contents, effectiveReplaceRules)
+        val paragraphOrderPreserved = preservesSourceParagraphOrder(
+            ParagraphOrderEvidenceInput(
+                originalContent = content,
+                finalParagraphs = contents,
+                includeTitle = includeTitle,
+                sameTitleRemoved = sameTitleRemoved,
+                reSegmentApplied = reSegmentApplied,
+                replacementChangedContent = replacementChangedContent,
+            )
+        )
+        return BookContent(
+            sameTitleRemoved = sameTitleRemoved,
+            textList = contents,
+            effectiveReplaceRules = effectiveReplaceRules,
+            paragraphOrderPreserved = paragraphOrderPreserved,
+        )
     }
 
 }

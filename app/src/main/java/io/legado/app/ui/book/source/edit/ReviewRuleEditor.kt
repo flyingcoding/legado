@@ -7,6 +7,8 @@ internal fun Map<String, String?>.toReviewRuleOrNull(): ReviewRule? {
     if (values.none { !it.isNullOrBlank() }) return null
     return ReviewRule(
         contractVersion = value("contractVersion"),
+        transportPolicy = value("transportPolicy"),
+        paragraphMappingMode = value("paragraphMappingMode"),
         reviewIndexUrl = value("reviewIndexUrl"),
         reviewUrl = value("reviewUrl"),
         reviewQuoteUrl = value("reviewQuoteUrl"),

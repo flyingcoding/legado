@@ -1133,6 +1133,7 @@ class ReadBookActivity : BaseReadBookActivity(),
             chapter = textChapter.chapter,
             contentHash = textChapter.reviewContentHash,
             localParagraphCount = textChapter.reviewLocalParagraphCount,
+            paragraphOrderPreserved = textChapter.reviewParagraphOrderPreserved,
             force = force,
         )
     }

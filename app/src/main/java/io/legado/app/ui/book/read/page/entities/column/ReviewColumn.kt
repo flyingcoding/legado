@@ -30,7 +30,11 @@ data class ReviewColumn(
         } else {
             ChapterProvider.contentPaint
         }
-        drawToCanvas(canvas, textLine.lineBase, textPaint.textSize)
+        drawToCanvas(
+            canvas,
+            reviewColumnLocalBaseline(textLine.lineBase, textLine.lineTop),
+            textPaint.textSize,
+        )
     }
 
     val countText by lazy {
@@ -72,3 +76,7 @@ data class ReviewColumn(
 /** 把真实段评计数格式化为阅读气泡的有界文本。 */
 fun formatParagraphReviewCount(count: Int): String =
     if (count > 999) "999+" else count.toString()
+
+/** 把整页绝对基线转换成 TextLine 离屏画布使用的行内基线。 */
+fun reviewColumnLocalBaseline(lineBase: Float, lineTop: Float): Float =
+    lineBase - lineTop

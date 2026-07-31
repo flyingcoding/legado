@@ -1,8 +1,35 @@
 package io.legado.app.model.review
 
 import io.legado.app.BuildConfig
+import io.legado.app.data.entities.rule.ReviewRule
 import okhttp3.HttpUrl
 import okhttp3.HttpUrl.Companion.toHttpUrlOrNull
+
+/** 封装段评 HTTP 的构建类型与书源显式调试声明。 */
+data class ReviewTransportPolicy(
+    val isDebugBuild: Boolean,
+    val declaredPolicy: String?,
+) {
+
+    /** 仅在 debug 构建且声明值受支持时允许远程 HTTP。 */
+    fun allowsRemoteHttp(): Boolean =
+        isDebugBuild && declaredPolicy == ReviewRule.DEBUG_HTTP_TRANSPORT_POLICY
+
+    companion object {
+
+        /** 使用当前构建类型和规则声明创建运行时策略。 */
+        fun fromRule(rule: ReviewRule): ReviewTransportPolicy = ReviewTransportPolicy(
+            isDebugBuild = BuildConfig.DEBUG,
+            declaredPolicy = rule.transportPolicy,
+        )
+
+        /** 创建未声明远程 HTTP 的默认策略。 */
+        fun default(): ReviewTransportPolicy = ReviewTransportPolicy(
+            isDebugBuild = BuildConfig.DEBUG,
+            declaredPolicy = null,
+        )
+    }
+}
 
 /** 保存 URL 模板展开时允许使用的七类合同变量。 */
 data class ReviewTemplateValues(
@@ -30,8 +57,8 @@ data class ReviewTemplateValues(
 /** 安全展开固定 v1 GET 端点的 query 模板。 */
 object ReviewTemplateExpander {
 
-    private val placeholderRegex = Regex("\\{\\{([A-Za-z][A-Za-z0-9]*)}}")
-    private val anyTemplateMarkerRegex = Regex("\\{\\{.*?}}")
+    private val placeholderRegex = Regex("\\{\\{([A-Za-z][A-Za-z0-9]*)\\}\\}")
+    private val anyTemplateMarkerRegex = Regex("\\{\\{.*?\\}\\}")
     private val decimalIdRegex = Regex("^[0-9]+$")
 
     private data class EndpointPolicy(
@@ -92,10 +119,11 @@ object ReviewTemplateExpander {
         endpoint: ReviewEndpoint,
         template: String,
         values: ReviewTemplateValues,
+        transportPolicy: ReviewTransportPolicy = ReviewTransportPolicy.default(),
     ): HttpUrl {
         val source = sourceUrl.toHttpUrlOrNull()
             ?: throw ReviewException.InvalidTemplate("书源地址不是有效 URL")
-        validateOriginScheme(source)
+        validateOriginScheme(source, transportPolicy)
         validateTemplateText(template)
         validateValues(values)
 
@@ -118,7 +146,14 @@ object ReviewTemplateExpander {
         }
         val parsed = source.resolve(safeTemplate)
             ?: throw ReviewException.InvalidTemplate("无法解析端点地址")
-        validateParsedTemplate(source, endpoint, parsed, policy, sentinels)
+        validateParsedTemplate(
+            source = source,
+            endpoint = endpoint,
+            parsed = parsed,
+            policy = policy,
+            sentinels = sentinels,
+            transportPolicy = transportPolicy,
+        )
 
         val builder = parsed.newBuilder()
         val valueMap = values.asMap()
@@ -143,13 +178,17 @@ object ReviewTemplateExpander {
     }
 
     /** 校验响应最终 URL 未通过重定向离开书源 origin。 */
-    fun requireSameOrigin(sourceUrl: String, responseUrl: String) {
+    fun requireSameOrigin(
+        sourceUrl: String,
+        responseUrl: String,
+        transportPolicy: ReviewTransportPolicy = ReviewTransportPolicy.default(),
+    ) {
         val source = sourceUrl.toHttpUrlOrNull()
             ?: throw ReviewException.InvalidTemplate("书源地址不是有效 URL")
         val response = responseUrl.toHttpUrlOrNull()
             ?: throw ReviewException.Protocol("响应最终地址无效")
         try {
-            validateSameOrigin(source, response)
+            validateSameOrigin(source, response, transportPolicy)
         } catch (_: ReviewException.InvalidTemplate) {
             throw ReviewException.Protocol("响应重定向离开书源 origin")
         }
@@ -180,8 +219,9 @@ object ReviewTemplateExpander {
         parsed: HttpUrl,
         policy: EndpointPolicy,
         sentinels: Map<String, String>,
+        transportPolicy: ReviewTransportPolicy,
     ) {
-        validateSameOrigin(source, parsed)
+        validateSameOrigin(source, parsed, transportPolicy)
         if (parsed.encodedPath != endpoint.path) {
             throw ReviewException.InvalidTemplate("端点路径不匹配")
         }
@@ -205,18 +245,25 @@ object ReviewTemplateExpander {
         }
     }
 
-    /** 校验书源和端点仅使用 HTTPS 或本机调试 HTTP。 */
-    private fun validateOriginScheme(url: HttpUrl) {
+    /** 校验书源和端点仅使用 HTTPS、debug 本机 HTTP 或显式 debug 远程 HTTP。 */
+    private fun validateOriginScheme(url: HttpUrl, transportPolicy: ReviewTransportPolicy) {
         val localHosts = setOf("localhost", "127.0.0.1", "::1")
-        val isDebugLoopback = BuildConfig.DEBUG && url.scheme == "http" && url.host in localHosts
-        if (url.scheme != "https" && !isDebugLoopback) {
-            throw ReviewException.InvalidTemplate("仅允许 HTTPS 或本机调试 HTTP")
+        val isHttp = url.scheme == "http"
+        val isDebugLoopback = transportPolicy.isDebugBuild && isHttp && url.host in localHosts
+        val isExplicitDebugRemote = isHttp && transportPolicy.allowsRemoteHttp()
+        if (url.scheme != "https" && !isDebugLoopback && !isExplicitDebugRemote) {
+            throw ReviewException.InvalidTemplate("段评传输策略不允许当前协议")
         }
     }
 
     /** 校验端点与书源使用完全相同的 scheme、host 和 port。 */
-    private fun validateSameOrigin(source: HttpUrl, endpoint: HttpUrl) {
-        validateOriginScheme(endpoint)
+    private fun validateSameOrigin(
+        source: HttpUrl,
+        endpoint: HttpUrl,
+        transportPolicy: ReviewTransportPolicy,
+    ) {
+        validateOriginScheme(source, transportPolicy)
+        validateOriginScheme(endpoint, transportPolicy)
         if (source.scheme != endpoint.scheme || source.host != endpoint.host || source.port != endpoint.port) {
             throw ReviewException.InvalidTemplate("端点与书源不同源")
         }

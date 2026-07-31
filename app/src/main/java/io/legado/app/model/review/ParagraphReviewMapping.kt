@@ -1,5 +1,6 @@
 package io.legado.app.model.review
 
+import io.legado.app.data.entities.rule.ReviewRule
 import java.nio.ByteBuffer
 import java.security.MessageDigest
 
@@ -19,10 +20,12 @@ data class ParagraphReviewMapping(
 /** 描述一次段落映射所需的稳定输入。 */
 data class ParagraphReviewMappingInput(
     val sourceUrl: String,
+    val paragraphMappingMode: String?,
     val itemId: String,
     val itemVersion: String,
     val contentHash: String,
     val localParagraphCount: Int,
+    val paragraphOrderPreserved: Boolean,
     val reviewIndex: ReviewIndex,
 )
 
@@ -72,14 +75,14 @@ fun interface ParagraphReviewMapper {
     fun map(input: ParagraphReviewMappingInput): ParagraphReviewMappingResult
 }
 
-/** 按书源 URL 注册显式验证过的 mapper，未注册来源始终安全隐藏。 */
+/** 按书源显式 mapping mode 注册验证过的 mapper，未注册模式始终安全隐藏。 */
 class ParagraphReviewMapperRegistry(
-    private val verifiedMappers: Map<String, ParagraphReviewMapper> = emptyMap(),
+    private val verifiedMappers: Map<String, ParagraphReviewMapper> = defaultMappers(),
 ) {
 
     /** 调用来源专属 mapper，并统一验证其身份、hash、边界、重复和计数。 */
     fun map(input: ParagraphReviewMappingInput): ParagraphReviewMappingResult {
-        val mapper = verifiedMappers[input.sourceUrl]
+        val mapper = input.paragraphMappingMode?.let(verifiedMappers::get)
             ?: return ParagraphReviewMappingResult.Unavailable(
                 ParagraphReviewMappingUnavailableReason.NO_VERIFIED_MAPPER
             )
@@ -140,6 +143,42 @@ class ParagraphReviewMapperRegistry(
             )
         }
         return result
+    }
+
+    companion object {
+
+        /** 注册经脱敏真实样本约束的内置番茄段序 mapper。 */
+        private fun defaultMappers(): Map<String, ParagraphReviewMapper> = mapOf(
+            ReviewRule.FANQIE_PARAGRAPH_INDEX_MAPPING_MODE to
+                FanqieParagraphIndexMapper,
+        )
+    }
+}
+
+/** 在书源显式声明且正文段序证据有效时复用番茄 paraId 作为本地下标。 */
+private object FanqieParagraphIndexMapper : ParagraphReviewMapper {
+
+    /** 只输出索引中真实存在的正计数段落，其余一致性由 registry 统一校验。 */
+    override fun map(input: ParagraphReviewMappingInput): ParagraphReviewMappingResult {
+        if (!input.paragraphOrderPreserved) {
+            return ParagraphReviewMappingResult.Unavailable(
+                ParagraphReviewMappingUnavailableReason.UNSUPPORTED_CONTENT
+            )
+        }
+        return ParagraphReviewMappingResult.Verified(
+            mappings = input.reviewIndex.paragraphs.asSequence()
+                .filter { it.count > 0 }
+                .map { paragraph ->
+                    ParagraphReviewMapping(
+                        localParagraphIndex = paragraph.paraId,
+                        paraId = paragraph.paraId,
+                        count = paragraph.count,
+                    )
+                }
+                .toList(),
+            evidence = ParagraphReviewMappingEvidence.VERIFIED_SOURCE_FIXTURE,
+            contentHash = input.contentHash,
+        )
     }
 }
 

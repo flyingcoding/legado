@@ -20,6 +20,8 @@ class ReviewRuleEditorTest {
     @Test
     fun toReviewRuleOrNull_buildsCompleteReadOnlyRule() {
         val values = requiredValues() + mapOf(
+            "transportPolicy" to ReviewRule.DEBUG_HTTP_TRANSPORT_POLICY,
+            "paragraphMappingMode" to ReviewRule.FANQIE_PARAGRAPH_INDEX_MAPPING_MODE,
             "userIdRule" to "$.user_id",
             "quoteParentIdRule" to "$.reply_to_reply_id",
             "quoteChildrenRule" to "$.children",
@@ -27,6 +29,8 @@ class ReviewRuleEditorTest {
 
         val rule = values.toReviewRuleOrNull()
         assertTrue(rule?.supportsParagraphCommentsV1() == true)
+        assertEquals(ReviewRule.DEBUG_HTTP_TRANSPORT_POLICY, rule?.transportPolicy)
+        assertEquals(ReviewRule.FANQIE_PARAGRAPH_INDEX_MAPPING_MODE, rule?.paragraphMappingMode)
         assertEquals("$.user_id", rule?.userIdRule)
         assertEquals("$.reply_to_reply_id", rule?.quoteParentIdRule)
         assertEquals("$.children", rule?.quoteChildrenRule)
@@ -37,6 +41,19 @@ class ReviewRuleEditorTest {
     fun toReviewRuleOrNull_keepsIncompleteRuleForValidation() {
         val rule = mapOf("reviewUrl" to "/comments").toReviewRuleOrNull()
         assertFalse(rule?.supportsParagraphCommentsV1() == true)
+    }
+
+    /** 验证编辑器保留未知可选声明但不会把它们误当成必填能力。 */
+    @Test
+    fun toReviewRuleOrNull_preservesUnknownOptionalDeclarations() {
+        val rule = (requiredValues() + mapOf(
+            "transportPolicy" to "future-transport",
+            "paragraphMappingMode" to "future-mapper",
+        )).toReviewRuleOrNull()
+
+        assertEquals("future-transport", rule?.transportPolicy)
+        assertEquals("future-mapper", rule?.paragraphMappingMode)
+        assertTrue(rule?.supportsParagraphCommentsV1() == true)
     }
 
     /** 验证未修改的旧规则可沿用，而新建或改动后的不完整规则会被拒绝。 */

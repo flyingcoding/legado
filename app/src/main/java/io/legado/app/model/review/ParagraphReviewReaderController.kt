@@ -1,5 +1,6 @@
 package io.legado.app.model.review
 
+import io.legado.app.constant.AppLog
 import io.legado.app.data.entities.BookChapter
 import io.legado.app.data.entities.BookSource
 import kotlinx.coroutines.CancellationException
@@ -26,6 +27,7 @@ class ParagraphReviewReaderController(
     private val reducer = ParagraphReviewGenerationReducer()
     private var indexJob: Job? = null
     private var sourceUrl: String? = null
+    private var mappingContext: ParagraphReviewMappingContext? = null
 
     val state: ParagraphReviewReaderState
         get() = reducer.state
@@ -43,6 +45,7 @@ class ParagraphReviewReaderController(
         chapter: BookChapter,
         contentHash: String,
         localParagraphCount: Int,
+        paragraphOrderPreserved: Boolean,
         force: Boolean = false,
     ) {
         if (!source.supportsParagraphCommentsV1() || contentHash.isBlank()) {
@@ -53,18 +56,26 @@ class ParagraphReviewReaderController(
             disable()
             return
         }
+        val requestedMappingContext = ParagraphReviewMappingContext(
+            transportPolicy = source.ruleReview?.transportPolicy,
+            paragraphMappingMode = source.ruleReview?.paragraphMappingMode,
+            localParagraphCount = localParagraphCount,
+            paragraphOrderPreserved = paragraphOrderPreserved,
+        )
         val current = reducer.state.generation
         if (!force && current != null &&
             current.sourceUrl == source.bookSourceUrl &&
             current.bookUrl == bookUrl &&
             current.chapterIndex == chapter.index &&
             current.itemId == identity.itemId &&
-            current.contentHash == contentHash
+            current.contentHash == contentHash &&
+            mappingContext == requestedMappingContext
         ) {
             return
         }
         val oldSourceUrl = sourceUrl
         sourceUrl = source.bookSourceUrl
+        mappingContext = requestedMappingContext
         cache.cancelInFlight()
         indexJob?.cancel()
         if (oldSourceUrl != null && oldSourceUrl != source.bookSourceUrl) {
@@ -107,14 +118,19 @@ class ParagraphReviewReaderController(
                 val mapping = mapperRegistry.map(
                     ParagraphReviewMappingInput(
                         sourceUrl = source.bookSourceUrl,
+                        paragraphMappingMode = requestedMappingContext.paragraphMappingMode,
                         itemId = identity.itemId,
                         itemVersion = index.itemVersion,
                         contentHash = contentHash,
-                        localParagraphCount = localParagraphCount,
+                        localParagraphCount = requestedMappingContext.localParagraphCount,
+                        paragraphOrderPreserved =
+                            requestedMappingContext.paragraphOrderPreserved,
                         reviewIndex = index,
                     )
                 )
                 if (reducer.commit(generation, ReviewIndexLoadState.Content(index), mapping)) {
+                    paragraphReviewDiagnosticFor(mapping)
+                        ?.let(::reportParagraphReviewDiagnostic)
                     onStateChanged(reducer.state)
                 }
             } catch (_: CancellationException) {
@@ -122,6 +138,8 @@ class ParagraphReviewReaderController(
             } catch (error: Throwable) {
                 val retryable = (error as? ReviewException)?.retryable == true
                 if (reducer.commit(generation, ReviewIndexLoadState.Error(retryable))) {
+                    paragraphReviewDiagnosticFor(error)
+                        ?.let(::reportParagraphReviewDiagnostic)
                     onStateChanged(reducer.state)
                 }
             }
@@ -134,6 +152,7 @@ class ParagraphReviewReaderController(
         cache.cancelInFlight()
         indexJob?.cancel()
         indexJob = null
+        mappingContext = null
         reducer.invalidate()
         onStateChanged(reducer.state)
     }
@@ -148,6 +167,14 @@ class ParagraphReviewReaderController(
     }
 }
 
+/** 绑定会影响同一正文 hash 映射结果的规则声明与段序证据。 */
+private data class ParagraphReviewMappingContext(
+    val transportPolicy: String?,
+    val paragraphMappingMode: String?,
+    val localParagraphCount: Int,
+    val paragraphOrderPreserved: Boolean,
+)
+
 /** 判断当前书源是否完整声明 fanqie 段评 v1 只读能力。 */
 fun BookSource?.supportsParagraphCommentsV1(): Boolean =
     this?.ruleReview?.supportsParagraphCommentsV1() == true
@@ -158,3 +185,31 @@ fun isParagraphReviewEffective(
     source: BookSource?,
     userEnabled: Boolean,
 ): Boolean = !isLocalBook && userEnabled && source.supportsParagraphCommentsV1()
+
+/** 定义不携带 URL、身份或响应内容的阅读页段评诊断分类。 */
+enum class ParagraphReviewDiagnostic(val code: String) {
+    TRANSPORT_REJECTED("transport_rejected"),
+    MAPPING_UNAVAILABLE("mapping_unavailable"),
+    MAPPING_INVALID("mapping_invalid"),
+}
+
+/** 将映射结果归约为稳定且脱敏的诊断分类。 */
+fun paragraphReviewDiagnosticFor(
+    result: ParagraphReviewMappingResult,
+): ParagraphReviewDiagnostic? = when (result) {
+    is ParagraphReviewMappingResult.Unavailable ->
+        ParagraphReviewDiagnostic.MAPPING_UNAVAILABLE
+
+    is ParagraphReviewMappingResult.Invalid -> ParagraphReviewDiagnostic.MAPPING_INVALID
+    is ParagraphReviewMappingResult.Verified -> null
+}
+
+/** 仅把请求前的安全拒绝归约为稳定传输诊断，不记录异常消息。 */
+fun paragraphReviewDiagnosticFor(error: Throwable): ParagraphReviewDiagnostic? =
+    ParagraphReviewDiagnostic.TRANSPORT_REJECTED
+        .takeIf { error is ReviewException.InvalidTemplate }
+
+/** 记录不包含动态请求数据的段评诊断代码。 */
+private fun reportParagraphReviewDiagnostic(diagnostic: ParagraphReviewDiagnostic) {
+    AppLog.putDebug("paragraph_review:${diagnostic.code}")
+}

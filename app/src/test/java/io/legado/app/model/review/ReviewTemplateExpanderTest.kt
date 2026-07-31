@@ -1,8 +1,10 @@
 package io.legado.app.model.review
 
+import io.legado.app.data.entities.rule.ReviewRule
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertThrows
+import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class ReviewTemplateExpanderTest {
@@ -114,6 +116,96 @@ class ReviewTemplateExpanderTest {
                 "https://other.example.invalid/api/book/paragraph_comments",
             )
         }
+    }
+
+    /** 验证远程 HTTP 仅在 debug 且书源显式声明时覆盖三个只读端点。 */
+    @Test
+    fun transportPolicy_allowsExplicitDebugRemoteHttpForAllReadOnlyEndpoints() {
+        val policy = ReviewTransportPolicy(
+            isDebugBuild = true,
+            declaredPolicy = ReviewRule.DEBUG_HTTP_TRANSPORT_POLICY,
+        )
+        val cases = listOf(
+            Triple(
+                ReviewEndpoint.INDEX,
+                "/api/book/paragraph_comments?book_id={{bookId}}&item_id={{itemId}}&detail_limit=0",
+                ReviewTemplateValues(bookId = "1", itemId = "2"),
+            ),
+            Triple(
+                ReviewEndpoint.COMMENT_PAGE,
+                "/api/book/paragraph_comment_page?book_id={{bookId}}&item_id={{itemId}}" +
+                    "&para_id={{paraId}}&item_version={{itemVersion}}" +
+                    "&count={{pageSize}}&cursor={{cursor}}",
+                ReviewTemplateValues("1", "2", 3, "0", pageSize = 20),
+            ),
+            Triple(
+                ReviewEndpoint.REPLY_PAGE,
+                "/api/book/paragraph_comment_replies?book_id={{bookId}}&item_id={{itemId}}" +
+                    "&comment_id={{commentId}}&count={{pageSize}}&cursor={{cursor}}",
+                ReviewTemplateValues("1", "2", commentId = "4", pageSize = 20),
+            ),
+        )
+
+        cases.forEach { (endpoint, template, values) ->
+            val url = ReviewTemplateExpander.expand(
+                sourceUrl = "http://remote.example.invalid",
+                endpoint = endpoint,
+                template = template,
+                values = values,
+                transportPolicy = policy,
+            )
+            assertEquals("http", url.scheme)
+            ReviewTemplateExpander.requireSameOrigin(
+                "http://remote.example.invalid",
+                url.toString(),
+                policy,
+            )
+        }
+    }
+
+    /** 验证缺少声明、未知声明和 release 构建都在远程 HTTP 请求前拒绝。 */
+    @Test
+    fun transportPolicy_rejectsRemoteHttpWithoutExactDebugOptIn() {
+        val policies = listOf(
+            ReviewTransportPolicy(isDebugBuild = true, declaredPolicy = null),
+            ReviewTransportPolicy(isDebugBuild = true, declaredPolicy = "future-policy"),
+            ReviewTransportPolicy(
+                isDebugBuild = false,
+                declaredPolicy = ReviewRule.DEBUG_HTTP_TRANSPORT_POLICY,
+            ),
+        )
+
+        policies.forEach { policy ->
+            assertThrows(ReviewException.InvalidTemplate::class.java) {
+                ReviewTemplateExpander.expand(
+                    sourceUrl = "http://remote.example.invalid",
+                    endpoint = ReviewEndpoint.INDEX,
+                    template = "/api/book/paragraph_comments" +
+                        "?book_id={{bookId}}&item_id={{itemId}}&detail_limit=0",
+                    values = ReviewTemplateValues(bookId = "1", itemId = "2"),
+                    transportPolicy = policy,
+                )
+            }
+        }
+
+        val releaseLoopback = ReviewTransportPolicy(
+            isDebugBuild = false,
+            declaredPolicy = ReviewRule.DEBUG_HTTP_TRANSPORT_POLICY,
+        )
+        assertThrows(ReviewException.InvalidTemplate::class.java) {
+            ReviewTemplateExpander.expand(
+                sourceUrl = "http://127.0.0.1:8080",
+                endpoint = ReviewEndpoint.INDEX,
+                template = "/api/book/paragraph_comments" +
+                    "?book_id={{bookId}}&item_id={{itemId}}&detail_limit=0",
+                values = ReviewTemplateValues(bookId = "1", itemId = "2"),
+                transportPolicy = releaseLoopback,
+            )
+        }
+        assertTrue(
+            ReviewTransportPolicy(true, ReviewRule.DEBUG_HTTP_TRANSPORT_POLICY)
+                .allowsRemoteHttp()
+        )
     }
 
     /** 验证 ID、分页大小、版本和 cursor 的本地边界。 */

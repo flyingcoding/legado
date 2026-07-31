@@ -31,6 +31,7 @@ data class TextChapter(
     val effectiveReplaceRules: List<ReplaceRule>?,
     val reviewContentHash: String = "",
     val reviewLocalParagraphCount: Int = 0,
+    val reviewParagraphOrderPreserved: Boolean = false,
     val reviewLayoutData: ParagraphReviewLayoutData = ParagraphReviewLayoutData.EMPTY,
 ) : LayoutProgressListener {
 

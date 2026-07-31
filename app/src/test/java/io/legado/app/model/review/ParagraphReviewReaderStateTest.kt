@@ -7,6 +7,34 @@ import org.junit.Test
 
 class ParagraphReviewReaderStateTest {
 
+    /** 验证阅读页诊断只暴露稳定分类，不拼接异常或映射动态内容。 */
+    @Test
+    fun diagnostics_reduceErrorsAndMappingsToStableCategories() {
+        assertEquals(
+            ParagraphReviewDiagnostic.TRANSPORT_REJECTED,
+            paragraphReviewDiagnosticFor(
+                ReviewException.InvalidTemplate("sensitive-url-must-not-appear")
+            ),
+        )
+        assertEquals(
+            ParagraphReviewDiagnostic.MAPPING_UNAVAILABLE,
+            paragraphReviewDiagnosticFor(
+                ParagraphReviewMappingResult.Unavailable(
+                    ParagraphReviewMappingUnavailableReason.NO_VERIFIED_MAPPER
+                )
+            ),
+        )
+        assertEquals(
+            ParagraphReviewDiagnostic.MAPPING_INVALID,
+            paragraphReviewDiagnosticFor(
+                ParagraphReviewMappingResult.Invalid(
+                    ParagraphReviewMappingInvalidReason.COUNT_MISMATCH
+                )
+            ),
+        )
+        assertEquals(null, paragraphReviewDiagnosticFor(ReviewException.Network()))
+    }
+
     /** 验证快速切换三个章节时只有最后 generation 能提交。 */
     @Test
     fun reducer_acceptsOnlyLatestGeneration() {

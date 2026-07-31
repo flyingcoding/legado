@@ -8,6 +8,7 @@ data class BookContent(
     val textList: List<String>,
     //起效的替换规则
     val effectiveReplaceRules: List<ReplaceRule>?,
+    val paragraphOrderPreserved: Boolean = false,
     val paragraphReviewLayoutData: ParagraphReviewLayoutData = ParagraphReviewLayoutData.EMPTY,
 ) {
 

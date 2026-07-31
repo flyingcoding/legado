@@ -812,6 +812,8 @@
     <string name="review_reply_empty" tools:ignore="MissingTranslation">No replies</string>
     <!-- 段评规则只维护默认和简体中文资源，其余 locale 回退到默认文案。 -->
     <string name="rule_review_contract" tools:ignore="MissingTranslation">Comment contract (contractVersion)</string>
+    <string name="rule_review_transport_policy" tools:ignore="MissingTranslation">Comment transport policy (transportPolicy)</string>
+    <string name="rule_review_paragraph_mapping_mode" tools:ignore="MissingTranslation">Paragraph mapping mode (paragraphMappingMode)</string>
     <string name="rule_review_index_url" tools:ignore="MissingTranslation">Comment index URL (reviewIndexUrl)</string>
     <string name="rule_review_url">Comment page URL (reviewUrl)</string>
     <string name="rule_review_quote_url" tools:ignore="MissingTranslation">Reply page URL (reviewQuoteUrl)</string>

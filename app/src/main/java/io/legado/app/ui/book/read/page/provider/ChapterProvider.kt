@@ -323,6 +323,7 @@ object ChapterProvider {
             bookContent.effectiveReplaceRules,
             paragraphReviewContentHash(bookContent.textList),
             bookContent.textList.size,
+            bookContent.paragraphOrderPreserved,
             bookContent.paragraphReviewLayoutData,
         )
     }
@@ -346,6 +347,7 @@ object ChapterProvider {
             bookContent.effectiveReplaceRules,
             paragraphReviewContentHash(bookContent.textList),
             bookContent.textList.size,
+            bookContent.paragraphOrderPreserved,
             bookContent.paragraphReviewLayoutData,
         ).apply {
             createLayout(scope, book, bookContent)

@@ -2,6 +2,7 @@ package io.legado.app.ui.book.read.review
 
 import io.legado.app.model.review.ParagraphReply
 import io.legado.app.ui.book.read.page.entities.column.formatParagraphReviewCount
+import io.legado.app.ui.book.read.page.entities.column.reviewColumnLocalBaseline
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Test
@@ -52,6 +53,12 @@ class ParagraphReviewUiModelsTest {
         assertEquals("1", formatParagraphReviewCount(1))
         assertEquals("999", formatParagraphReviewCount(999))
         assertEquals("999+", formatParagraphReviewCount(1000))
+    }
+
+    /** 验证气泡在行内离屏画布中使用相对基线，避免重复叠加行偏移。 */
+    @Test
+    fun reviewColumn_usesLineLocalBaseline() {
+        assertEquals(52f, reviewColumnLocalBaseline(lineBase = 412f, lineTop = 360f), 0f)
     }
 
     /** 创建最小回复树节点。 */

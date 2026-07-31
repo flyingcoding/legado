@@ -55,6 +55,18 @@ class ReviewRuleTest {
     @Test
     fun supportsParagraphCommentsV1_acceptsMissingOptionalFieldsOnly() {
         assertTrue(completeRule().supportsParagraphCommentsV1())
+        assertTrue(
+            completeRule().copy(
+                transportPolicy = ReviewRule.DEBUG_HTTP_TRANSPORT_POLICY,
+                paragraphMappingMode = ReviewRule.FANQIE_PARAGRAPH_INDEX_MAPPING_MODE,
+            ).supportsParagraphCommentsV1()
+        )
+        assertTrue(
+            completeRule().copy(
+                transportPolicy = "future-transport",
+                paragraphMappingMode = "future-mapper",
+            ).supportsParagraphCommentsV1()
+        )
         assertFalse(
             completeRule().copy(contractVersion = "fanqie.paragraph-comments.v2")
                 .supportsParagraphCommentsV1()
@@ -85,6 +97,11 @@ class ReviewRuleTest {
             .single()
         val reviewRule = source.ruleReview
         assertTrue(reviewRule?.supportsParagraphCommentsV1() == true)
+        assertEquals(ReviewRule.DEBUG_HTTP_TRANSPORT_POLICY, reviewRule?.transportPolicy)
+        assertEquals(
+            ReviewRule.FANQIE_PARAGRAPH_INDEX_MAPPING_MODE,
+            reviewRule?.paragraphMappingMode,
+        )
 
         val converters = BookSource.Converters()
         val restored = converters.stringToReviewRule(converters.reviewRuleToString(reviewRule))
@@ -132,6 +149,29 @@ class ReviewRuleTest {
         assertEquals(source.ruleContent, restored.ruleContent)
     }
 
+    /** 验证新增可选声明的受支持值和未知值都能原样往返。 */
+    @Test
+    fun optionalDeclarations_roundTripWithoutChangingCapability() {
+        val converters = BookSource.Converters()
+        val declarations = listOf(
+            ReviewRule.DEBUG_HTTP_TRANSPORT_POLICY to
+                ReviewRule.FANQIE_PARAGRAPH_INDEX_MAPPING_MODE,
+            "future-transport" to "future-mapper",
+        )
+
+        declarations.forEach { (transportPolicy, paragraphMappingMode) ->
+            val rule = completeRule().copy(
+                transportPolicy = transportPolicy,
+                paragraphMappingMode = paragraphMappingMode,
+            )
+            val restored = converters.stringToReviewRule(converters.reviewRuleToString(rule))
+
+            assertEquals(transportPolicy, restored?.transportPolicy)
+            assertEquals(paragraphMappingMode, restored?.paragraphMappingMode)
+            assertTrue(restored?.supportsParagraphCommentsV1() == true)
+        }
+    }
+
     /** 验证无规则、null、旧规则、未知合同和不完整规则均不破坏书源原有字段。 */
     @Test
     fun bookSource_importsUnsupportedReviewShapesWithoutChangingExistingRules() {
@@ -174,14 +214,29 @@ class ReviewRuleTest {
         val changed = source.copy(
             ruleReview = source.ruleReview?.copy(reviewUrl = "/changed")
         )
+        val changedTransport = source.copy(
+            ruleReview = source.ruleReview?.copy(
+                transportPolicy = ReviewRule.DEBUG_HTTP_TRANSPORT_POLICY
+            )
+        )
+        val changedMapping = source.copy(
+            ruleReview = source.ruleReview?.copy(
+                paragraphMappingMode = ReviewRule.FANQIE_PARAGRAPH_INDEX_MAPPING_MODE
+            )
+        )
 
         assertFalse(source.equal(changed))
+        assertFalse(source.equal(changedTransport))
+        assertFalse(source.equal(changedMapping))
         assertTrue(source.equal(source.copy()))
     }
 
     /** 创建覆盖合同全部字段的 v1 规则。 */
     private fun completeRule(includeOptionalFields: Boolean = false): ReviewRule = ReviewRule(
         contractVersion = ReviewRule.PARAGRAPH_COMMENTS_V1_CONTRACT,
+        transportPolicy = ReviewRule.DEBUG_HTTP_TRANSPORT_POLICY.takeIf { includeOptionalFields },
+        paragraphMappingMode = ReviewRule.FANQIE_PARAGRAPH_INDEX_MAPPING_MODE
+            .takeIf { includeOptionalFields },
         reviewIndexUrl = "/api/book/paragraph_comments",
         reviewUrl = "/api/book/paragraph_comment_page",
         reviewQuoteUrl = "/api/book/paragraph_comment_replies",

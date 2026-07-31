@@ -1,0 +1,17 @@
+{
+  "mappingMode": "fanqie.paragraph-index.v1",
+  "sanitized": true,
+  "sampledChapters": 20,
+  "chaptersWithComments": 10,
+  "positiveParagraphEntries": 18,
+  "chaptersWithBlankSourceParagraphs": 0,
+  "outOfBoundsParagraphEntries": 0,
+  "representative": {
+    "localParagraphCount": 6,
+    "contentHash": "7f4db9ec7a1d48f3bd9c74d0cb6325632516ed5c6b9d8be54f79a39a975c9417",
+    "positiveParagraphs": [
+      { "paraId": 1, "count": 2 },
+      { "paraId": 4, "count": 1 }
+    ]
+  }
+}

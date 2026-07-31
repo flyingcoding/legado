@@ -61,6 +61,7 @@ class DefaultParagraphReviewRepository(
         )
         return request(
             source = source,
+            rule = rule,
             endpoint = ReviewEndpoint.INDEX,
             template = rule.reviewIndexUrl!!,
             values = values,
@@ -86,6 +87,7 @@ class DefaultParagraphReviewRepository(
         )
         return request(
             source = source,
+            rule = rule,
             endpoint = ReviewEndpoint.COMMENT_PAGE,
             template = rule.reviewUrl!!,
             values = values,
@@ -110,6 +112,7 @@ class DefaultParagraphReviewRepository(
         )
         return request(
             source = source,
+            rule = rule,
             endpoint = ReviewEndpoint.REPLY_PAGE,
             template = rule.reviewQuoteUrl!!,
             values = values,
@@ -121,6 +124,7 @@ class DefaultParagraphReviewRepository(
     /** 通过现有请求链执行 GET 并统一处理状态、重定向和错误 envelope。 */
     private suspend fun <T> request(
         source: BookSource,
+        rule: ReviewRule,
         endpoint: ReviewEndpoint,
         template: String,
         values: ReviewTemplateValues,
@@ -128,11 +132,13 @@ class DefaultParagraphReviewRepository(
     ): T {
         val context = currentCoroutineContext()
         context.ensureActive()
+        val transportPolicy = ReviewTransportPolicy.fromRule(rule)
         val safeUrl = ReviewTemplateExpander.expand(
             sourceUrl = source.bookSourceUrl,
             endpoint = endpoint,
             template = template,
             values = values,
+            transportPolicy = transportPolicy,
         )
         val response = try {
             httpExecutor.execute(ReviewTemplateExpander.toAnalyzeUrlInput(safeUrl), source, context)
@@ -141,7 +147,11 @@ class DefaultParagraphReviewRepository(
             throw ReviewException.Network()
         }
         context.ensureActive()
-        ReviewTemplateExpander.requireSameOrigin(source.bookSourceUrl, response.url)
+        ReviewTemplateExpander.requireSameOrigin(
+            source.bookSourceUrl,
+            response.url,
+            transportPolicy,
+        )
 
         val status = response.code()
         if (status == 401) throw ReviewException.Authentication()
