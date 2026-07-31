@@ -42,7 +42,7 @@ class ParagraphReviewDialog : BaseDialogFragment(R.layout.dialog_paragraph_revie
             sourceUrl = arguments?.getString(ParagraphReviewViewModel.ARG_SOURCE_URL).orEmpty(),
         )
     }
-    private var showingReplies = false
+    private var showingReplies: Boolean? = null
 
     /** 把 Dialog 扩展到全屏。 */
     override fun onStart() {
@@ -99,7 +99,7 @@ class ParagraphReviewDialog : BaseDialogFragment(R.layout.dialog_paragraph_revie
             }
         }
         tvState.setOnClickListener {
-            val error = if (showingReplies) {
+            val error = if (showingReplies == true) {
                 viewModel.replyState.value.error
             } else {
                 viewModel.state.value.error
@@ -137,6 +137,7 @@ class ParagraphReviewDialog : BaseDialogFragment(R.layout.dialog_paragraph_revie
             return@run
         }
         val inReplies = replies.comment != null
+        replyAdapter.updateHeader(replies.comment)
         switchListMode(inReplies)
         val initialLoading: Boolean
         val refreshing: Boolean
@@ -204,10 +205,13 @@ class ParagraphReviewDialog : BaseDialogFragment(R.layout.dialog_paragraph_revie
 
     /** 在主评和回复 adapter 间切换并保存各自 RecyclerView 滚动状态。 */
     private fun switchListMode(inReplies: Boolean) = binding.recyclerView.run {
-        if (showingReplies == inReplies) return@run
-        layoutManager?.onSaveInstanceState()?.let { state ->
-            if (showingReplies) viewModel.replyListState = state
-            else viewModel.commentListState = state
+        val transition = paragraphReviewListModeTransition(showingReplies, inReplies)
+        if (!transition.modeChanged) return@run
+        if (transition.saveCurrentState) {
+            layoutManager?.onSaveInstanceState()?.let { state ->
+                if (showingReplies == true) viewModel.replyListState = state
+                else viewModel.commentListState = state
+            }
         }
         showingReplies = inReplies
         adapter = if (inReplies) replyAdapter else commentAdapter
@@ -221,10 +225,14 @@ class ParagraphReviewDialog : BaseDialogFragment(R.layout.dialog_paragraph_revie
 
     /** 在旋转重建前把当前列表位置交给 Dialog ViewModel 保存。 */
     override fun onDestroyView() {
-        binding.recyclerView.layoutManager?.onSaveInstanceState()?.let { state ->
-            if (showingReplies) viewModel.replyListState = state
-            else viewModel.commentListState = state
+        showingReplies?.let { inReplies ->
+            binding.recyclerView.layoutManager?.onSaveInstanceState()?.let { state ->
+                if (inReplies) viewModel.replyListState = state
+                else viewModel.commentListState = state
+            }
+            replyAdapter.releaseHeaderBinding()
         }
+        showingReplies = null
         super.onDestroyView()
     }
 

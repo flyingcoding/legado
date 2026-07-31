@@ -124,9 +124,10 @@ class ParagraphReviewViewModel(
         }
     }
 
-    /** 选择主评并优先展示合同中已经携带的 eager 回复。 */
+    /** 选择主评、重置旧回复滚动位置并优先展示合同中携带的 eager 回复。 */
     fun openReplies(comment: ParagraphComment) {
         if (!initialized || _replyState.value.comment?.commentId == comment.commentId) return
+        replyListState = null
         replyLoadEpoch++
         cache.cancelReplyFlights()
         replyLoadJob?.cancel()

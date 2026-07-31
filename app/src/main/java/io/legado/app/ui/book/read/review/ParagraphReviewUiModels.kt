@@ -25,6 +25,34 @@ data class ParagraphReviewReplyListItem(
     val visualDepth: Int,
 )
 
+/** 描述列表模式切换时是否需要保存旧位置并重新绑定目标 adapter。 */
+internal data class ParagraphReviewListModeTransition(
+    val modeChanged: Boolean,
+    val saveCurrentState: Boolean,
+)
+
+/** 保存主评行和回复头部共用的只读展示字段。 */
+internal data class ParagraphReviewCommentPresentation(
+    val userName: String,
+    val content: String,
+    val time: String,
+    val diggCount: Int,
+    val replyCount: Int,
+    val avatarUrl: String?,
+    val canOpenReplies: Boolean,
+)
+
+/** 保存回复行的只读展示字段，回复目标仅来自显式服务端字段。 */
+internal data class ParagraphReviewReplyPresentation(
+    val userName: String,
+    val replyToUserName: String?,
+    val content: String,
+    val time: String,
+    val diggCount: Int,
+    val replyCount: Int,
+    val avatarUrl: String?,
+)
+
 /** 描述当前选中主评及其回复分页状态。 */
 data class ParagraphReviewReplyUiState(
     val comment: ParagraphComment? = null,
@@ -68,15 +96,59 @@ fun safeParagraphReviewAvatar(url: String?): String? {
     return parsed.toString().takeIf { parsed.scheme == "https" }
 }
 
-/** 以先序遍历展开完整回复树，仅限制视觉缩进而不截断内部关系。 */
+/** 将主评投影为列表行与回复头部共用的安全只读字段。 */
+internal fun presentParagraphReviewComment(
+    comment: ParagraphComment,
+    anonymousUser: String,
+    unknownTime: String,
+    repliesClickable: Boolean,
+    zoneId: ZoneId = ZoneId.systemDefault(),
+): ParagraphReviewCommentPresentation = ParagraphReviewCommentPresentation(
+    userName = comment.userName?.takeIf(String::isNotBlank) ?: anonymousUser,
+    content = comment.text,
+    time = formatParagraphReviewTime(comment.createTimestamp, unknownTime, zoneId),
+    diggCount = comment.diggCount,
+    replyCount = comment.replyCount,
+    avatarUrl = safeParagraphReviewAvatar(comment.userAvatar),
+    canOpenReplies = repliesClickable && comment.replyCount > 0,
+)
+
+/** 将回复投影为安全只读字段，不从正文、用户名或顺序推断回复目标。 */
+internal fun presentParagraphReviewReply(
+    reply: ParagraphReply,
+    anonymousUser: String,
+    unknownTime: String,
+    zoneId: ZoneId = ZoneId.systemDefault(),
+): ParagraphReviewReplyPresentation = ParagraphReviewReplyPresentation(
+    userName = reply.userName?.takeIf(String::isNotBlank) ?: anonymousUser,
+    replyToUserName = reply.replyToUserName?.takeIf(String::isNotBlank),
+    content = reply.text,
+    time = formatParagraphReviewTime(reply.createTimestamp, unknownTime, zoneId),
+    diggCount = reply.diggCount,
+    replyCount = reply.replyCount,
+    avatarUrl = safeParagraphReviewAvatar(reply.userAvatar),
+)
+
+/** 区分视图首次绑定与运行中的模式切换，避免首次绑定覆盖已保存滚动位置。 */
+internal fun paragraphReviewListModeTransition(
+    currentRepliesMode: Boolean?,
+    targetRepliesMode: Boolean,
+): ParagraphReviewListModeTransition = ParagraphReviewListModeTransition(
+    modeChanged = currentRepliesMode != targetRepliesMode,
+    saveCurrentState = currentRepliesMode != null && currentRepliesMode != targetRepliesMode,
+)
+
+/** 以主评下一级为起点先序展开回复树，仅限制视觉缩进而不截断关系。 */
 fun flattenParagraphReviewReplies(
     roots: List<ParagraphReply>,
     maxVisualDepth: Int = DEFAULT_MAX_REPLY_VISUAL_DEPTH,
 ): List<ParagraphReviewReplyListItem> {
-    require(maxVisualDepth >= 0) { "maxVisualDepth must not be negative" }
+    require(maxVisualDepth >= REPLY_CONTEXT_VISUAL_DEPTH) {
+        "maxVisualDepth must include the comment context depth"
+    }
     val result = ArrayList<ParagraphReviewReplyListItem>()
     val stack = ArrayDeque<Pair<ParagraphReply, Int>>()
-    roots.asReversed().forEach { stack.addLast(it to 0) }
+    roots.asReversed().forEach { stack.addLast(it to REPLY_CONTEXT_VISUAL_DEPTH) }
     while (stack.isNotEmpty()) {
         val (reply, depth) = stack.removeLast()
         result += ParagraphReviewReplyListItem(reply, depth.coerceAtMost(maxVisualDepth))
@@ -86,4 +158,5 @@ fun flattenParagraphReviewReplies(
 }
 
 private val REVIEW_TIME_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")
+private const val REPLY_CONTEXT_VISUAL_DEPTH = 1
 private const val DEFAULT_MAX_REPLY_VISUAL_DEPTH = 3
