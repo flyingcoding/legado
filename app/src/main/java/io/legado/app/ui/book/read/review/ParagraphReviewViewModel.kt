@@ -30,7 +30,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
-/** 为全屏段评 Dialog 串行加载主评 cursor 页并保留旋转期间列表状态。 */
+/** 为段评底部抽屉维护独立的主评分页和单条内联回复分页状态。 */
 class ParagraphReviewViewModel(
     application: Application,
 ) : BaseViewModel(application) {
@@ -46,6 +46,7 @@ class ParagraphReviewViewModel(
     private var replyLoadJob: Job? = null
     private var commentLoadEpoch = 0L
     private var replyLoadEpoch = 0L
+    private var replyVisibleLimit = 0
     private var initialized = false
     private lateinit var sourceUrl: String
     private lateinit var bookId: String
@@ -55,6 +56,7 @@ class ParagraphReviewViewModel(
     var generation: Long = -1L
         private set
     private var indexPartial = false
+    private var initialCommentCount = 0
 
     private val _state = MutableStateFlow(ParagraphReviewCommentUiState())
     val state = _state.asStateFlow()
@@ -62,7 +64,6 @@ class ParagraphReviewViewModel(
     val replyState = _replyState.asStateFlow()
 
     var commentListState: Parcelable? = null
-    var replyListState: Parcelable? = null
 
     /** 从不可变参数初始化一次并加载主评第一页。 */
     fun init(arguments: Bundle?) {
@@ -75,6 +76,10 @@ class ParagraphReviewViewModel(
         paraId = args.getInt(ARG_PARA_ID, -1)
         generation = args.getLong(ARG_GENERATION, -1L)
         indexPartial = args.getBoolean(ARG_PARTIAL, false)
+        initialCommentCount = resolveParagraphReviewCommentTotal(
+            indexCount = args.getInt(ARG_COMMENT_COUNT, 0),
+            serverTotal = null,
+        )
         initialized = sourceUrl.isNotBlank() && bookId.isNotBlank() &&
             itemId.isNotBlank() && itemVersion.isNotBlank() && paraId >= 0 && generation >= 0
         if (!initialized) {
@@ -83,62 +88,80 @@ class ParagraphReviewViewModel(
             )
             return
         }
+        _state.value = ParagraphReviewCommentUiState(total = initialCommentCount)
         loadFirstCommentPage(force = false)
     }
 
-    /** 按当前主评/回复层刷新对应 cursor 链。 */
-    fun refresh() {
+    /** 收起旧回复并强制刷新主评第一页。 */
+    fun refreshComments() {
         if (!initialized) return
-        if (_replyState.value.comment == null) {
-            loadFirstCommentPage(force = true)
+        closeReplies()
+        loadFirstCommentPage(force = true)
+    }
+
+    /** 仅在目标仍为当前展开主评时强制刷新其回复第一页。 */
+    fun refreshReplies(commentId: String) {
+        if (!initialized || _replyState.value.comment?.commentId != commentId) return
+        loadFirstReplyPage(force = true)
+    }
+
+    /** 按主评当前成功页状态重试第一页或失败的下一页。 */
+    fun retryComments() {
+        if (!initialized) return
+        if (!commentAccumulator.hasLoadedPage()) loadFirstCommentPage(force = true)
+        else loadMoreComments()
+    }
+
+    /** 仅在目标仍为当前展开主评时重试回复第一页或失败的下一页。 */
+    fun retryReplies(commentId: String) {
+        if (!initialized || _replyState.value.comment?.commentId != commentId) return
+        if (!replyAccumulator.hasLoadedPage()) {
+            loadFirstReplyPage(force = true)
+            return
+        }
+        val snapshot = replyAccumulator.snapshot()
+        if (snapshot.hasMore && snapshot.nextCursor.isNotBlank()) {
+            loadReplyPagesUntilVisible(
+                cursor = snapshot.nextCursor,
+                force = false,
+                refreshing = false,
+            )
         } else {
             loadFirstReplyPage(force = true)
         }
     }
 
-    /** 按当前主评/回复层串行加载下一 cursor 页。 */
-    fun loadMore() {
+    /** 忽略无回复或已选主评，并在点击其他主评时切换内联回复。 */
+    fun toggleReplies(comment: ParagraphComment) {
         if (!initialized) return
-        if (_replyState.value.comment == null) loadMoreComments() else loadMoreReplies()
-    }
-
-    /** 按当前列表是否已有成功项重试第一页或失败的下一页。 */
-    fun retry() {
-        val current = if (_replyState.value.comment == null) _state.value else _replyState.value
-        when (current) {
-            is ParagraphReviewCommentUiState -> {
-                if (!commentAccumulator.hasLoadedPage()) {
-                    loadFirstCommentPage(force = true)
-                } else {
-                    loadMoreComments()
-                }
-            }
-
-            is ParagraphReviewReplyUiState -> {
-                if (!replyAccumulator.hasLoadedPage()) {
-                    loadFirstReplyPage(force = true)
-                } else {
-                    loadMoreReplies()
-                }
-            }
+        when (
+            paragraphReviewReplyToggleAction(
+                selectedCommentId = _replyState.value.comment?.commentId,
+                clickedCommentId = comment.commentId,
+                replyCount = comment.replyCount,
+            )
+        ) {
+            ParagraphReviewReplyToggleAction.IGNORE -> return
+            ParagraphReviewReplyToggleAction.EXPAND -> openReplies(comment)
         }
     }
 
-    /** 选择主评、重置旧回复滚动位置并优先展示合同中携带的 eager 回复。 */
-    fun openReplies(comment: ParagraphComment) {
-        if (!initialized || _replyState.value.comment?.commentId == comment.commentId) return
-        replyListState = null
+    /** 选择主评、取消旧 flight，并优先发布合同中携带的 eager 回复。 */
+    private fun openReplies(comment: ParagraphComment) {
         replyLoadEpoch++
         cache.cancelReplyFlights()
         replyLoadJob?.cancel()
         replyLoadJob = null
         replyAccumulator = CursorPageAccumulator(ParagraphReply::replyId)
+        replyVisibleLimit = initialParagraphReviewReplyVisibleLimit()
         _replyState.value = ParagraphReviewReplyUiState(
             comment = comment,
+            total = comment.replyTotal ?: comment.replyCount,
+            visibleLimit = replyVisibleLimit,
             initialLoading = !comment.repliesLoaded,
         )
         if (!comment.repliesLoaded) {
-            loadReplyPage(cursor = null, force = false, refreshing = false)
+            loadReplyPagesUntilVisible(cursor = null, force = false, refreshing = false)
             return
         }
         runCatching {
@@ -150,7 +173,15 @@ class ParagraphReviewViewModel(
                 nextCursor = comment.replyNextCursor.orEmpty(),
             )
         }.onSuccess {
-            publishReplySnapshot(comment)
+            val window = publishReplySnapshot(comment)
+            val snapshot = replyAccumulator.snapshot()
+            if (window.shouldLoadMore && snapshot.nextCursor.isNotBlank()) {
+                loadReplyPagesUntilVisible(
+                    cursor = snapshot.nextCursor,
+                    force = false,
+                    refreshing = false,
+                )
+            }
         }.onFailure { error ->
             _replyState.value = ParagraphReviewReplyUiState(
                 comment = comment,
@@ -166,23 +197,45 @@ class ParagraphReviewViewModel(
         replyLoadJob?.cancel()
         replyLoadJob = null
         replyAccumulator = CursorPageAccumulator(ParagraphReply::replyId)
+        replyVisibleLimit = 0
         _replyState.value = ParagraphReviewReplyUiState()
     }
 
-    /** 在上一主评页声明 hasMore 时加载下一页。 */
-    private fun loadMoreComments() {
+    /** 在上一主评页声明 hasMore 时仅加载主评下一页。 */
+    fun loadMoreComments() {
+        if (!initialized) return
         if (commentLoadJob?.isActive == true) return
         val snapshot = commentAccumulator.snapshot()
         if (!snapshot.hasMore || snapshot.nextCursor.isBlank()) return
         loadCommentPage(cursor = snapshot.nextCursor, force = false, refreshing = false)
     }
 
-    /** 在上一回复页声明 hasMore 时加载下一页。 */
-    private fun loadMoreReplies() {
+    /** 推进当前主评下一可见批次，全部可见时由同一 footer 一次性收起。 */
+    fun loadMoreReplies(commentId: String) {
+        if (!initialized || _replyState.value.comment?.commentId != commentId) return
         if (replyLoadJob?.isActive == true) return
+        when (_replyState.value.footerAction) {
+            ParagraphReviewReplyFooterAction.NONE -> return
+            ParagraphReviewReplyFooterAction.COLLAPSE -> {
+                closeReplies()
+                return
+            }
+            ParagraphReviewReplyFooterAction.REVEAL_MORE -> Unit
+        }
+        replyVisibleLimit = advanceParagraphReviewReplyVisibleLimit(
+            currentLimit = replyVisibleLimit,
+            requestedBatchSize = _replyState.value.nextBatchSize,
+        )
+        val comment = _replyState.value.comment ?: return
+        val window = publishReplySnapshot(comment)
         val snapshot = replyAccumulator.snapshot()
-        if (!snapshot.hasMore || snapshot.nextCursor.isBlank()) return
-        loadReplyPage(cursor = snapshot.nextCursor, force = false, refreshing = false)
+        if (window.shouldLoadMore && snapshot.nextCursor.isNotBlank()) {
+            loadReplyPagesUntilVisible(
+                cursor = snapshot.nextCursor,
+                force = false,
+                refreshing = false,
+            )
+        }
     }
 
     /** 重置主评聚合器并进入首屏 loading 或保留内容的刷新状态。 */
@@ -195,6 +248,7 @@ class ParagraphReviewViewModel(
         val retained = _state.value.takeIf { force }
         _state.value = ParagraphReviewCommentUiState(
             items = retained?.items.orEmpty(),
+            total = retained?.total ?: _state.value.total,
             initialLoading = retained?.items.isNullOrEmpty(),
             refreshing = !retained?.items.isNullOrEmpty(),
             hasMore = retained?.hasMore == true,
@@ -255,6 +309,10 @@ class ParagraphReviewViewModel(
                 val snapshot = commentAccumulator.snapshot()
                 _state.value = ParagraphReviewCommentUiState(
                     items = snapshot.items,
+                    total = resolveParagraphReviewCommentTotal(
+                        indexCount = initialCommentCount,
+                        serverTotal = snapshot.total,
+                    ),
                     hasMore = snapshot.hasMore,
                     partial = indexPartial,
                 )
@@ -266,6 +324,7 @@ class ParagraphReviewViewModel(
                 val retained = _state.value
                 _state.value = ParagraphReviewCommentUiState(
                     items = snapshot.items.ifEmpty { retained.items },
+                    total = if (commentAccumulator.hasLoadedPage()) snapshot.total else retained.total,
                     hasMore = snapshot.hasMore || retained.hasMore,
                     partial = indexPartial,
                     error = error.toUiError(),
@@ -282,19 +341,31 @@ class ParagraphReviewViewModel(
         replyLoadJob?.cancel()
         replyLoadJob = null
         replyAccumulator = CursorPageAccumulator(ParagraphReply::replyId)
+        replyVisibleLimit = initialParagraphReviewReplyVisibleLimit()
         val retained = _replyState.value.takeIf { force }
         _replyState.value = ParagraphReviewReplyUiState(
             comment = comment,
             items = retained?.items.orEmpty(),
+            loadedCount = retained?.items?.size ?: 0,
+            total = retained?.total ?: comment.replyTotal ?: comment.replyCount,
+            visibleLimit = replyVisibleLimit,
             initialLoading = retained?.items.isNullOrEmpty(),
             refreshing = !retained?.items.isNullOrEmpty(),
             hasMore = retained?.hasMore == true,
         )
-        loadReplyPage(cursor = null, force = force, refreshing = _replyState.value.refreshing)
+        loadReplyPagesUntilVisible(
+            cursor = null,
+            force = force,
+            refreshing = _replyState.value.refreshing,
+        )
     }
 
-    /** 从 Room 取得当前书源后加载并合并一页回复树。 */
-    private fun loadReplyPage(cursor: String?, force: Boolean, refreshing: Boolean) {
+    /** 连续合并回复 cursor 页，直到当前可见批次已满足或服务端无更多。 */
+    private fun loadReplyPagesUntilVisible(
+        cursor: String?,
+        force: Boolean,
+        refreshing: Boolean,
+    ) {
         val comment = _replyState.value.comment ?: return
         if (replyLoadJob?.isActive == true) return
         val loadEpoch = replyLoadEpoch
@@ -302,7 +373,7 @@ class ParagraphReviewViewModel(
             current.copy(
                 initialLoading = cursor == null && !refreshing && current.items.isEmpty(),
                 refreshing = refreshing && current.items.isNotEmpty(),
-                loadingMore = cursor != null,
+                loadingMore = cursor != null || (!refreshing && current.items.isNotEmpty()),
                 error = null,
             )
         }
@@ -314,72 +385,146 @@ class ParagraphReviewViewModel(
                 if (cursor == null && force) {
                     cache.invalidateReplies(sourceUrl, bookId, itemId, comment.commentId)
                 }
-                val request = ParagraphReplyPageRequest(
-                    bookId = bookId,
-                    itemId = itemId,
-                    commentId = comment.commentId,
-                    cursor = cursor,
-                )
-                val page = cache.getOrLoad(
-                    ReviewCacheKey.Replies(
-                        sourceUrl = sourceUrl,
+                var requestedCursor = cursor
+                var firstRequest = true
+                while (true) {
+                    val previousLoadedCount = flattenLoadedReplies(
+                        replyAccumulator.snapshot().items
+                    ).size
+                    val request = ParagraphReplyPageRequest(
                         bookId = bookId,
                         itemId = itemId,
                         commentId = comment.commentId,
-                        cursor = cursor.orEmpty(),
-                    ),
-                    force = force,
-                ) {
-                    repository.loadReplyPage(source, request, replyAccumulator.seenCursors())
+                        cursor = requestedCursor,
+                    )
+                    val page = cache.getOrLoad(
+                        ReviewCacheKey.Replies(
+                            sourceUrl = sourceUrl,
+                            bookId = bookId,
+                            itemId = itemId,
+                            commentId = comment.commentId,
+                            cursor = requestedCursor.orEmpty(),
+                        ),
+                        force = force && firstRequest,
+                    ) {
+                        repository.loadReplyPage(source, request, replyAccumulator.seenCursors())
+                    }
+                    ensureActive()
+                    if (!canCommitParagraphReviewReplyResult(
+                            loadEpoch = loadEpoch,
+                            currentEpoch = replyLoadEpoch,
+                            loadedCommentId = comment.commentId,
+                            selectedCommentId = _replyState.value.comment?.commentId,
+                        )
+                    ) {
+                        return@launch
+                    }
+                    replyAccumulator.append(
+                        requestedCursor = requestedCursor,
+                        items = page.replies,
+                        total = page.total,
+                        hasMore = page.hasMore,
+                        nextCursor = page.nextCursor,
+                    )
+                    val snapshot = replyAccumulator.snapshot()
+                    val loadedCount = flattenLoadedReplies(snapshot.items).size
+                    if (isParagraphReviewReplyPageStalled(
+                            previousLoadedCount = previousLoadedCount,
+                            loadedCount = loadedCount,
+                            serverHasMore = snapshot.hasMore,
+                        )
+                    ) {
+                        throw ReviewException.Protocol("回复分页未产生新项目")
+                    }
+                    val window = paragraphReviewReplyWindow(
+                        loadedCount = loadedCount,
+                        serverTotal = snapshot.total,
+                        serverHasMore = snapshot.hasMore,
+                        visibleLimit = replyVisibleLimit,
+                    )
+                    if (!window.shouldLoadMore) {
+                        publishReplySnapshot(comment)
+                        return@launch
+                    }
+                    requestedCursor = snapshot.nextCursor
+                    firstRequest = false
                 }
-                ensureActive()
-                if (loadEpoch != replyLoadEpoch ||
-                    _replyState.value.comment?.commentId != comment.commentId
-                ) {
-                    return@launch
-                }
-                replyAccumulator.append(
-                    requestedCursor = cursor,
-                    items = page.replies,
-                    total = page.total,
-                    hasMore = page.hasMore,
-                    nextCursor = page.nextCursor,
-                )
-                publishReplySnapshot(comment)
             } catch (_: CancellationException) {
                 // 取消不映射为 UI 错误。
             } catch (error: Throwable) {
-                if (loadEpoch != replyLoadEpoch ||
-                    _replyState.value.comment?.commentId != comment.commentId
+                if (!canCommitParagraphReviewReplyResult(
+                        loadEpoch = loadEpoch,
+                        currentEpoch = replyLoadEpoch,
+                        loadedCommentId = comment.commentId,
+                        selectedCommentId = _replyState.value.comment?.commentId,
+                    )
                 ) {
                     return@launch
                 }
                 val snapshot = replyAccumulator.snapshot()
                 val retained = _replyState.value
+                val hasLoadedPage = replyAccumulator.hasLoadedPage()
+                if (!hasLoadedPage) {
+                    _replyState.value = retained.copy(
+                        initialLoading = false,
+                        refreshing = false,
+                        loadingMore = false,
+                        error = error.toUiError(),
+                    )
+                    return@launch
+                }
+                val flattened = flattenLoadedReplies(snapshot.items)
+                val window = paragraphReviewReplyWindow(
+                    loadedCount = flattened.size,
+                    serverTotal = snapshot.total,
+                    serverHasMore = snapshot.hasMore,
+                    visibleLimit = replyVisibleLimit,
+                )
                 _replyState.value = ParagraphReviewReplyUiState(
                     comment = comment,
-                    items = if (snapshot.items.isEmpty()) retained.items else {
-                        flattenParagraphReviewReplies(
-                            ParagraphReplyTreeBuilder.build(snapshot.items)
-                        )
-                    },
-                    hasMore = snapshot.hasMore || retained.hasMore,
+                    items = flattened.take(window.visibleCount),
+                    loadedCount = flattened.size,
+                    total = snapshot.total,
+                    visibleLimit = replyVisibleLimit,
+                    nextBatchSize = window.nextBatchSize,
+                    footerAction = window.footerAction,
+                    hasMore = snapshot.hasMore,
                     error = error.toUiError(),
                 )
             }
         }
     }
 
-    /** 把全部已加载回复重建成跨页树并发布扁平渲染快照。 */
-    private fun publishReplySnapshot(comment: ParagraphComment) {
+    /** 从已加载领域回复重建完整扁平树，不应用 UI 可见批次裁剪。 */
+    private fun flattenLoadedReplies(items: List<ParagraphReply>): List<ParagraphReviewReplyListItem> =
+        flattenParagraphReviewReplies(ParagraphReplyTreeBuilder.build(items))
+
+    /** 发布当前可见切片，并返回是否仍需 cursor 页满足本批次。 */
+    private fun publishReplySnapshot(comment: ParagraphComment): ParagraphReviewReplyWindow {
         val snapshot = replyAccumulator.snapshot()
+        val flattened = flattenLoadedReplies(snapshot.items)
+        val window = paragraphReviewReplyWindow(
+            loadedCount = flattened.size,
+            serverTotal = snapshot.total,
+            serverHasMore = snapshot.hasMore,
+            visibleLimit = replyVisibleLimit,
+        )
         _replyState.value = ParagraphReviewReplyUiState(
             comment = comment,
-            items = flattenParagraphReviewReplies(
-                ParagraphReplyTreeBuilder.build(snapshot.items)
-            ),
+            items = flattened.take(window.visibleCount),
+            loadedCount = flattened.size,
+            total = snapshot.total,
+            visibleLimit = replyVisibleLimit,
+            nextBatchSize = window.nextBatchSize,
+            footerAction = window.footerAction,
             hasMore = snapshot.hasMore,
+            error = if (window.terminalInconsistent) {
+                ParagraphReviewUiError(ParagraphReviewUiErrorKind.PROTOCOL, false)
+            } else {
+                null
+            },
         )
+        return window
     }
 
     /** 把领域异常降级为稳定、脱敏的 UI 错误分类。 */
@@ -409,5 +554,6 @@ class ParagraphReviewViewModel(
         const val ARG_PARA_ID = "paraId"
         const val ARG_GENERATION = "generation"
         const val ARG_PARTIAL = "partial"
+        const val ARG_COMMENT_COUNT = "commentCount"
     }
 }

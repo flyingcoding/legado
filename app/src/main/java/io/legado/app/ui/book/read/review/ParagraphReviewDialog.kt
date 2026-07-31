@@ -1,8 +1,13 @@
 package io.legado.app.ui.book.read.review
 
+import android.graphics.Color
 import android.os.Bundle
+import android.view.Gravity
 import android.view.View
 import android.view.ViewGroup
+import android.view.WindowManager
+import android.widget.ImageView
+import androidx.core.graphics.drawable.toDrawable
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
@@ -12,52 +17,72 @@ import io.legado.app.R
 import io.legado.app.base.BaseDialogFragment
 import io.legado.app.databinding.DialogParagraphReviewBinding
 import io.legado.app.databinding.ViewLoadMoreBinding
+import io.legado.app.help.config.AppConfig
 import io.legado.app.lib.theme.accentColor
+import io.legado.app.ui.widget.dialog.PhotoDialog
 import io.legado.app.ui.widget.recycler.LoadMoreView
 import io.legado.app.ui.widget.recycler.VerticalDivider
-import io.legado.app.ui.widget.dialog.PhotoDialog
+import io.legado.app.utils.getCompatColor
 import io.legado.app.utils.gone
 import io.legado.app.utils.setLayout
+import io.legado.app.utils.setTintMutate
 import io.legado.app.utils.showDialogFragment
 import io.legado.app.utils.viewbindingdelegate.viewBinding
 import io.legado.app.utils.visible
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.launch
 
-/** 使用全屏只读列表展示一段主评及 cursor 分页状态。 */
+/** 以 75% 高度底部抽屉展示主评及单条展开的内联回复。 */
 class ParagraphReviewDialog : BaseDialogFragment(R.layout.dialog_paragraph_review) {
 
     private val binding by viewBinding(DialogParagraphReviewBinding::bind)
     private val viewModel by viewModels<ParagraphReviewViewModel>()
     private val commentLoadMoreView by lazy { LoadMoreView(requireContext()) }
-    private val replyLoadMoreView by lazy { LoadMoreView(requireContext()) }
+    private var listStateRestored = false
     private val sourceUrl: String
         get() = arguments?.getString(ParagraphReviewViewModel.ARG_SOURCE_URL).orEmpty()
     private val commentAdapter by lazy {
         ParagraphReviewCommentAdapter(
             context = requireContext(),
             sourceUrl = sourceUrl,
-            onRepliesClick = viewModel::openReplies,
+            onRepliesClick = viewModel::toggleReplies,
+            onReplyRetry = viewModel::retryReplies,
+            onReplyLoadMore = viewModel::loadMoreReplies,
             onImageClick = ::openImage,
-        )
+        ).also { adapter ->
+            adapter.addFooterView { ViewLoadMoreBinding.bind(commentLoadMoreView) }
+        }
     }
-    private val replyAdapter by lazy {
-        ParagraphReviewReplyAdapter(
-            context = requireContext(),
-            sourceUrl = sourceUrl,
-            onImageClick = ::openImage,
-        )
-    }
-    private var showingReplies: Boolean? = null
 
-    /** 把 Dialog 扩展到全屏。 */
+    /** 配置底部对齐、满宽、75% 高度、遮罩和窗口进出场动画。 */
     override fun onStart() {
         super.onStart()
-        setLayout(1f, ViewGroup.LayoutParams.MATCH_PARENT)
+        dialog?.setCanceledOnTouchOutside(true)
+        dialog?.window?.let { window ->
+            window.setBackgroundDrawable(Color.TRANSPARENT.toDrawable())
+            val attributes = window.attributes.apply {
+                gravity = Gravity.BOTTOM
+                if (AppConfig.isEInkMode) {
+                    dimAmount = 0f
+                    windowAnimations = 0
+                } else {
+                    dimAmount = DRAWER_DIM_AMOUNT
+                    windowAnimations = R.style.ParagraphReviewDrawerAnimation
+                }
+            }
+            if (AppConfig.isEInkMode) {
+                window.clearFlags(WindowManager.LayoutParams.FLAG_DIM_BEHIND)
+            } else {
+                window.addFlags(WindowManager.LayoutParams.FLAG_DIM_BEHIND)
+            }
+            window.attributes = attributes
+        }
+        setLayout(ViewGroup.LayoutParams.MATCH_PARENT, DRAWER_HEIGHT_RATIO)
     }
 
-    /** 初始化工具栏、列表、刷新、加载更多和状态收集。 */
+    /** 初始化工具栏、列表、分页和 STARTED 生命周期状态收集。 */
     override fun onFragmentCreated(view: View, savedInstanceState: Bundle?) {
+        binding.root.setBackgroundResource(R.drawable.bg_paragraph_review_drawer)
         viewModel.init(arguments)
         if (!isGenerationCurrent()) {
             dismissAllowingStateLoss()
@@ -68,59 +93,45 @@ class ParagraphReviewDialog : BaseDialogFragment(R.layout.dialog_paragraph_revie
         collectState()
     }
 
-    /** 配置主评关闭和回复返回主评的统一导航按钮。 */
+    /** 配置动态评论总数标题和关闭按钮。 */
     private fun initToolbar() = binding.toolBar.run {
-        setTitle(R.string.review_dialog_title)
-        setNavigationIcon(androidx.appcompat.R.drawable.abc_ic_ab_back_material)
-        setNavigationContentDescription(androidx.appcompat.R.string.abc_action_bar_up_description)
-        setNavigationOnClickListener {
-            if (viewModel.replyState.value.comment == null) {
-                dismissAllowingStateLoss()
-            } else {
-                viewModel.closeReplies()
-            }
-        }
+        val indexCount = arguments?.getInt(ParagraphReviewViewModel.ARG_COMMENT_COUNT, 0) ?: 0
+        val primaryTextColor = requireContext().getCompatColor(R.color.primaryText)
+        title = getString(R.string.review_comment_count_title, indexCount.coerceAtLeast(0))
+        setTitleTextColor(primaryTextColor)
+        setNavigationIcon(R.drawable.ic_baseline_close)
+        navigationIcon?.setTintMutate(primaryTextColor)
+        setNavigationContentDescription(R.string.close)
+        setNavigationOnClickListener { dismiss() }
     }
 
-    /** 配置 RecyclerView footer、下拉刷新、到底加载和错误重试。 */
+    /** 配置主列表刷新、主评分页 footer、到底加载和错误重试。 */
     private fun initList() = binding.run {
         refreshLayout.setColorSchemeColors(accentColor)
         recyclerView.addItemDecoration(VerticalDivider(requireContext()))
         recyclerView.adapter = commentAdapter
-        commentAdapter.addFooterView { ViewLoadMoreBinding.bind(commentLoadMoreView) }
-        replyAdapter.addFooterView { ViewLoadMoreBinding.bind(replyLoadMoreView) }
-        refreshLayout.setOnRefreshListener(viewModel::refresh)
+        refreshLayout.setOnRefreshListener(viewModel::refreshComments)
         commentLoadMoreView.setOnClickListener {
             val error = viewModel.state.value.error
             when {
-                error?.retryable == true -> viewModel.retry()
-                error == null -> viewModel.loadMore()
-            }
-        }
-        replyLoadMoreView.setOnClickListener {
-            val error = viewModel.replyState.value.error
-            when {
-                error?.retryable == true -> viewModel.retry()
-                error == null -> viewModel.loadMore()
+                error?.retryable == true -> viewModel.retryComments()
+                error == null -> viewModel.loadMoreComments()
             }
         }
         tvState.setOnClickListener {
-            val error = if (showingReplies == true) {
-                viewModel.replyState.value.error
-            } else {
-                viewModel.state.value.error
-            }
-            if (error?.retryable == true) viewModel.retry()
+            if (viewModel.state.value.error?.retryable == true) viewModel.retryComments()
         }
         recyclerView.addOnScrollListener(object : RecyclerView.OnScrollListener() {
-            /** 列表到底时请求下一 cursor 页。 */
+            /** 主列表到底时只请求主评下一 cursor 页。 */
             override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
-                if (dy > 0 && !recyclerView.canScrollVertically(1)) viewModel.loadMore()
+                if (dy > 0 && !recyclerView.canScrollVertically(1)) {
+                    viewModel.loadMoreComments()
+                }
             }
         })
     }
 
-    /** 在 STARTED 生命周期内合并主评与回复状态并渲染当前列表。 */
+    /** 在 STARTED 生命周期内合并主评和当前内联回复状态。 */
     private fun collectState() {
         viewLifecycleOwner.lifecycleScope.launch {
             viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
@@ -133,7 +144,7 @@ class ParagraphReviewDialog : BaseDialogFragment(R.layout.dialog_paragraph_revie
         }
     }
 
-    /** 把不可变 UI 状态绑定到列表和轻量状态控件。 */
+    /** 渲染主评列表和 footer，并把回复状态定向提交给所属主评行。 */
     private fun renderState(
         comments: ParagraphReviewCommentUiState,
         replies: ParagraphReviewReplyUiState,
@@ -142,115 +153,65 @@ class ParagraphReviewDialog : BaseDialogFragment(R.layout.dialog_paragraph_revie
             dismissAllowingStateLoss()
             return@run
         }
-        val inReplies = replies.comment != null
-        replyAdapter.updateHeader(replies.comment)
-        switchListMode(inReplies)
-        val initialLoading: Boolean
-        val refreshing: Boolean
-        val loadingMore: Boolean
-        val hasMore: Boolean
-        val isEmpty: Boolean
-        val error: ParagraphReviewUiError?
-        if (inReplies) {
-            replyAdapter.setItems(replies.items)
-            initialLoading = replies.initialLoading
-            refreshing = replies.refreshing
-            loadingMore = replies.loadingMore
-            hasMore = replies.hasMore
-            isEmpty = replies.items.isEmpty()
-            error = replies.error
-        } else {
+        if (commentAdapter.getItems() != comments.items) {
             commentAdapter.setItems(comments.items)
-            initialLoading = comments.initialLoading
-            refreshing = comments.refreshing
-            loadingMore = comments.loadingMore
-            hasMore = comments.hasMore
-            isEmpty = comments.items.isEmpty()
-            error = comments.error
         }
-        refreshLayout.isRefreshing = refreshing
-        progressBar.visibility = if (initialLoading) View.VISIBLE else View.GONE
+        if (!listStateRestored) {
+            viewModel.commentListState?.let {
+                recyclerView.layoutManager?.onRestoreInstanceState(it)
+            }
+            listStateRestored = true
+        }
+        commentAdapter.updateReplyState(replies)
+        toolBar.title = getString(R.string.review_comment_count_title, comments.total)
+        refreshLayout.isRefreshing = comments.refreshing
+        progressBar.visibility = if (comments.initialLoading) View.VISIBLE else View.GONE
         tvPartial.visibility = if (comments.partial) View.VISIBLE else View.GONE
-        toolBar.setTitle(
-            if (inReplies) R.string.review_replies_title else R.string.review_dialog_title
-        )
-        val errorText = error?.let(::errorText)
+        val errorText = comments.error?.let(requireContext()::paragraphReviewErrorText)
+        tvState.isClickable = false
+        tvState.isFocusable = false
         when {
-            initialLoading -> tvState.gone()
-            errorText != null && isEmpty -> {
+            comments.initialLoading -> tvState.gone()
+            errorText != null && comments.items.isEmpty() -> {
                 tvState.text = errorText
-                tvState.isClickable = error.retryable
+                tvState.isClickable = comments.error.retryable
+                tvState.isFocusable = comments.error.retryable
                 tvState.visible()
             }
-            isEmpty -> {
-                tvState.setText(
-                    if (inReplies) R.string.review_reply_empty else R.string.review_empty
-                )
+            comments.items.isEmpty() -> {
+                tvState.setText(R.string.review_empty)
                 tvState.isClickable = false
                 tvState.visible()
             }
             else -> tvState.gone()
         }
-        val loadMoreView = if (inReplies) replyLoadMoreView else commentLoadMoreView
         when {
-            loadingMore -> loadMoreView.startLoad()
-            error != null && !isEmpty -> loadMoreView.error(
+            comments.loadingMore -> commentLoadMoreView.startLoad()
+            comments.error != null && comments.items.isNotEmpty() -> commentLoadMoreView.error(
                 null,
                 getString(
-                    if (error.retryable) R.string.review_retry_load_more
+                    if (comments.error.retryable) R.string.review_retry_load_more
                     else R.string.review_load_more_failed
-                )
+                ),
             )
-            !hasMore && !isEmpty -> loadMoreView.noMore()
+            !comments.hasMore && comments.items.isNotEmpty() -> commentLoadMoreView.noMore()
             else -> {
-                loadMoreView.hasMore()
-                loadMoreView.stopLoad()
+                commentLoadMoreView.hasMore()
+                commentLoadMoreView.stopLoad()
             }
         }
     }
 
-    /** 在主评和回复 adapter 间切换并保存各自 RecyclerView 滚动状态。 */
-    private fun switchListMode(inReplies: Boolean) = binding.recyclerView.run {
-        val transition = paragraphReviewListModeTransition(showingReplies, inReplies)
-        if (!transition.modeChanged) return@run
-        if (transition.saveCurrentState) {
-            layoutManager?.onSaveInstanceState()?.let { state ->
-                if (showingReplies == true) viewModel.replyListState = state
-                else viewModel.commentListState = state
-            }
-        }
-        showingReplies = inReplies
-        adapter = if (inReplies) replyAdapter else commentAdapter
-        val targetState = if (inReplies) viewModel.replyListState else viewModel.commentListState
-        if (targetState == null) {
-            scrollToPosition(0)
-        } else {
-            layoutManager?.onRestoreInstanceState(targetState)
-        }
-    }
-
-    /** 在旋转重建前把当前列表位置交给 Dialog ViewModel 保存。 */
+    /** 在视图销毁前仅保存始终存在的主评列表滚动位置。 */
     override fun onDestroyView() {
-        showingReplies?.let { inReplies ->
-            binding.recyclerView.layoutManager?.onSaveInstanceState()?.let { state ->
-                if (inReplies) viewModel.replyListState = state
-                else viewModel.commentListState = state
-            }
-            replyAdapter.releaseHeaderBinding()
+        binding.recyclerView.layoutManager?.onSaveInstanceState()?.let {
+            viewModel.commentListState = it
         }
-        showingReplies = null
+        binding.recyclerView.adapter = null
+        binding.recyclerView.recycledViewPool.clear()
+        listStateRestored = false
         super.onDestroyView()
     }
-
-    /** 返回稳定、脱敏且不包含上游正文的错误文案。 */
-    private fun errorText(error: ParagraphReviewUiError): String = getString(
-        when (error.kind) {
-            ParagraphReviewUiErrorKind.AUTHENTICATION -> R.string.review_error_authentication
-            ParagraphReviewUiErrorKind.NETWORK -> R.string.review_error_network
-            ParagraphReviewUiErrorKind.PROTOCOL -> R.string.review_error_protocol
-            ParagraphReviewUiErrorKind.GENERIC -> R.string.review_error_generic
-        }
-    )
 
     /** 委托宿主再次校验 Dialog generation。 */
     private fun isGenerationCurrent(): Boolean {
@@ -258,9 +219,9 @@ class ParagraphReviewDialog : BaseDialogFragment(R.layout.dialog_paragraph_revie
         return (activity as? GenerationOwner)?.isParagraphReviewGenerationCurrent(generation) == true
     }
 
-    /** 使用书源 origin 打开现有原图预览对话框。 */
-    private fun openImage(url: String) {
-        showDialogFragment(PhotoDialog(url, sourceUrl))
+    /** 使用真实缩略图视图和书源 origin 打开原图转场预览。 */
+    private fun openImage(sourceView: ImageView, url: String) {
+        showDialogFragment(PhotoDialog(url, sourceUrl, sourceView))
     }
 
     /** 由阅读 Activity 提供当前 generation 校验。 */
@@ -268,5 +229,10 @@ class ParagraphReviewDialog : BaseDialogFragment(R.layout.dialog_paragraph_revie
 
         /** 判断 Dialog 携带的 generation 是否仍属于当前阅读章节。 */
         fun isParagraphReviewGenerationCurrent(generation: Long): Boolean
+    }
+
+    private companion object {
+        const val DRAWER_HEIGHT_RATIO = 0.75f
+        const val DRAWER_DIM_AMOUNT = 0.36f
     }
 }

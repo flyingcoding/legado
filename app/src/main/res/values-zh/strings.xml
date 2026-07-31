@@ -789,11 +789,14 @@
         <item quantity="other">本段有 %1$d 条评论</item>
     </plurals>
     <string name="review_dialog_title">段落评论</string>
+    <string name="review_comment_count_title">%1$d条评论</string>
     <string name="review_anonymous_user">匿名用户</string>
     <string name="review_unknown_time">时间未知</string>
     <string name="review_user_avatar">用户头像</string>
     <string name="review_like_count">赞 %1$d</string>
     <string name="review_reply_count">回复 %1$d</string>
+    <string name="review_expand_reply_count">展开%1$d条回复</string>
+    <string name="review_collapse_replies">收起</string>
     <string name="review_empty">暂无评论</string>
     <string name="review_partial_warning">部分评论加载失败，已保留成功内容</string>
     <string name="review_retry_load_more">加载失败，点击重试</string>

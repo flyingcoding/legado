@@ -3,10 +3,15 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/background"
+    android:background="@android:color/transparent"
     tools:ignore="Overdraw">
 
-    <!-- 该布局作为独立 Dialog 内容加载，根背景不由 Activity window 覆盖。 -->
+    <View
+        android:id="@+id/photo_scrim"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:alpha="0"
+        android:background="@android:color/black" />
 
     <io.legado.app.ui.widget.image.PhotoView
         android:id="@+id/photo_view"
@@ -15,4 +20,3 @@
         android:scaleType="centerInside" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
-

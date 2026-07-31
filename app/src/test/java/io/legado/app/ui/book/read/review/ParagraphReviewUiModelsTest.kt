@@ -182,6 +182,15 @@ class ParagraphReviewUiModelsTest {
                 zoneId = ZoneId.of("UTC"),
             ).canOpenReplies
         )
+        assertFalse(
+            presentParagraphReviewComment(
+                comment = selectedComment.copy(replyCount = 0),
+                anonymousUser = "匿名用户",
+                unknownTime = "未知时间",
+                repliesClickable = true,
+                zoneId = ZoneId.of("UTC"),
+            ).canOpenReplies
+        )
     }
 
     /** 验证缺失回复目标时不从正文中的 @ 文本伪造用户名。 */
@@ -198,25 +207,185 @@ class ParagraphReviewUiModelsTest {
         assertEquals("@某用户 仅作为正文", presentation.content)
     }
 
-    /** 验证首次视图绑定只恢复目标位置，不会覆盖旋转前已经保存的列表位置。 */
+    /** 验证分页 total 成功后覆盖索引计数，加载前和非法索引保持安全值。 */
     @Test
-    fun listModeTransition_doesNotSaveUninitializedViewState() {
-        val initial = paragraphReviewListModeTransition(
-            currentRepliesMode = null,
-            targetRepliesMode = true,
+    fun commentTotal_prefersServerTotalAfterFirstPage() {
+        assertEquals(8, resolveParagraphReviewCommentTotal(indexCount = 8, serverTotal = null))
+        assertEquals(11, resolveParagraphReviewCommentTotal(indexCount = 8, serverTotal = 11))
+        assertEquals(0, resolveParagraphReviewCommentTotal(indexCount = -1, serverTotal = null))
+    }
+
+    /** 验证零回复和已选主评忽略，另一主评切换为展开。 */
+    @Test
+    fun replyToggle_enforcesSingleExpandableComment() {
+        assertEquals(
+            ParagraphReviewReplyToggleAction.IGNORE,
+            paragraphReviewReplyToggleAction("first", "empty", 0),
         )
-        val unchanged = paragraphReviewListModeTransition(
-            currentRepliesMode = true,
-            targetRepliesMode = true,
+        assertEquals(
+            ParagraphReviewReplyToggleAction.IGNORE,
+            paragraphReviewReplyToggleAction("first", "first", 3),
         )
-        val changed = paragraphReviewListModeTransition(
-            currentRepliesMode = true,
-            targetRepliesMode = false,
+        assertEquals(
+            ParagraphReviewReplyToggleAction.EXPAND,
+            paragraphReviewReplyToggleAction("first", "second", 2),
+        )
+    }
+
+    /** 验证首次展开只显示三条，已预取的其余回复保持隐藏并提示下一批十条。 */
+    @Test
+    fun replyWindow_firstExpansionHidesPrefetchedRepliesAfterThree() {
+        val window = paragraphReviewReplyWindow(
+            loadedCount = 20,
+            serverTotal = 20,
+            serverHasMore = false,
+            visibleLimit = initialParagraphReviewReplyVisibleLimit(),
         )
 
-        assertEquals(ParagraphReviewListModeTransition(true, false), initial)
-        assertEquals(ParagraphReviewListModeTransition(false, false), unchanged)
-        assertEquals(ParagraphReviewListModeTransition(true, true), changed)
+        assertEquals(3, window.visibleCount)
+        assertEquals(10, window.nextBatchSize)
+        assertEquals(ParagraphReviewReplyFooterAction.REVEAL_MORE, window.footerAction)
+        assertFalse(window.shouldLoadMore)
+    }
+
+    /** 验证每次推进最多增加十条，并继续隐藏超过新上限的预取回复。 */
+    @Test
+    fun replyWindow_nextBatchAdvancesByTen() {
+        val nextLimit = advanceParagraphReviewReplyVisibleLimit(
+            initialParagraphReviewReplyVisibleLimit()
+        )
+        val window = paragraphReviewReplyWindow(
+            loadedCount = 30,
+            serverTotal = 30,
+            serverHasMore = false,
+            visibleLimit = nextLimit,
+        )
+
+        assertEquals(13, nextLimit)
+        assertEquals(13, window.visibleCount)
+        assertEquals(10, window.nextBatchSize)
+        assertEquals(ParagraphReviewReplyFooterAction.REVEAL_MORE, window.footerAction)
+        assertFalse(window.shouldLoadMore)
+    }
+
+    /** 验证已加载数量不足本批次且服务端有更多时继续请求独立 cursor 页。 */
+    @Test
+    fun replyWindow_requestsPagesUntilCurrentBatchIsAvailable() {
+        val window = paragraphReviewReplyWindow(
+            loadedCount = 5,
+            serverTotal = 25,
+            serverHasMore = true,
+            visibleLimit = 13,
+        )
+
+        assertEquals(5, window.visibleCount)
+        assertEquals(10, window.nextBatchSize)
+        assertEquals(ParagraphReviewReplyFooterAction.REVEAL_MORE, window.footerAction)
+        assertTrue(window.shouldLoadMore)
+    }
+
+    /** 验证最终不足十条的余量显示实际数量，全部可见后 footer 才切换为收起。 */
+    @Test
+    fun replyWindow_finalRemainderThenCollapse() {
+        val beforeFinalBatch = paragraphReviewReplyWindow(
+            loadedCount = 8,
+            serverTotal = 8,
+            serverHasMore = false,
+            visibleLimit = 3,
+        )
+        val afterFinalBatch = paragraphReviewReplyWindow(
+            loadedCount = 8,
+            serverTotal = 8,
+            serverHasMore = false,
+            visibleLimit = 13,
+        )
+
+        assertEquals(3, beforeFinalBatch.visibleCount)
+        assertEquals(5, beforeFinalBatch.nextBatchSize)
+        assertEquals(
+            ParagraphReviewReplyFooterAction.REVEAL_MORE,
+            beforeFinalBatch.footerAction,
+        )
+        assertEquals(8, afterFinalBatch.visibleCount)
+        assertEquals(0, afterFinalBatch.nextBatchSize)
+        assertEquals(ParagraphReviewReplyFooterAction.COLLAPSE, afterFinalBatch.footerAction)
+        assertFalse(afterFinalBatch.shouldLoadMore)
+    }
+
+    /** 验证 footer 显示最终五条时只推进五条，不会越过文案对应批次。 */
+    @Test
+    fun replyVisibleLimit_advancesByActualFooterBatch() {
+        assertEquals(
+            8,
+            advanceParagraphReviewReplyVisibleLimit(
+                currentLimit = 3,
+                requestedBatchSize = 5,
+            ),
+        )
+        assertEquals(
+            13,
+            advanceParagraphReviewReplyVisibleLimit(
+                currentLimit = 3,
+                requestedBatchSize = 50,
+            ),
+        )
+    }
+
+    /** 验证末页 total 大于已加载数时先展示隐藏项，随后报告不一致而不伪装收起。 */
+    @Test
+    fun replyWindow_terminalTotalMismatchDoesNotCollapseOrLoop() {
+        val hiddenLoaded = paragraphReviewReplyWindow(
+            loadedCount = 5,
+            serverTotal = 8,
+            serverHasMore = false,
+            visibleLimit = 3,
+        )
+        val exhausted = paragraphReviewReplyWindow(
+            loadedCount = 5,
+            serverTotal = 8,
+            serverHasMore = false,
+            visibleLimit = 5,
+        )
+
+        assertEquals(2, hiddenLoaded.nextBatchSize)
+        assertEquals(ParagraphReviewReplyFooterAction.REVEAL_MORE, hiddenLoaded.footerAction)
+        assertFalse(hiddenLoaded.terminalInconsistent)
+        assertEquals(ParagraphReviewReplyFooterAction.NONE, exhausted.footerAction)
+        assertFalse(exhausted.shouldLoadMore)
+        assertTrue(exhausted.terminalInconsistent)
+    }
+
+    /** 验证还有下一 cursor、但合并后节点数未增加时识别为停滞页。 */
+    @Test
+    fun replyPageProgress_rejectsStalledCursorPage() {
+        assertTrue(isParagraphReviewReplyPageStalled(3, 3, serverHasMore = true))
+        assertFalse(isParagraphReviewReplyPageStalled(3, 4, serverHasMore = true))
+        assertFalse(isParagraphReviewReplyPageStalled(3, 3, serverHasMore = false))
+    }
+
+    /** 验证切换主评重新使用三条上限，不继承旧主评已推进的批次。 */
+    @Test
+    fun replyVisibleLimit_resetsWhenSwitchingComments() {
+        val oldCommentLimit = advanceParagraphReviewReplyVisibleLimit(
+            initialParagraphReviewReplyVisibleLimit()
+        )
+        val switchedCommentLimit = initialParagraphReviewReplyVisibleLimit()
+
+        assertEquals(13, oldCommentLimit)
+        assertEquals(3, switchedCommentLimit)
+        assertEquals(
+            ParagraphReviewReplyToggleAction.EXPAND,
+            paragraphReviewReplyToggleAction("first", "second", 18),
+        )
+    }
+
+    /** 验证旧 epoch 或不同主评的回复结果都不能提交到当前内联区域。 */
+    @Test
+    fun replyCommit_requiresMatchingEpochAndComment() {
+        assertTrue(canCommitParagraphReviewReplyResult(3, 3, "comment", "comment"))
+        assertFalse(canCommitParagraphReviewReplyResult(2, 3, "comment", "comment"))
+        assertFalse(canCommitParagraphReviewReplyResult(3, 3, "old", "comment"))
+        assertFalse(canCommitParagraphReviewReplyResult(3, 3, "comment", null))
     }
 
     /** 验证 count 0/1/999/1000 的气泡文本边界。 */

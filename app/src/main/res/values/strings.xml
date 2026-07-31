@@ -794,11 +794,14 @@
         <item quantity="other">This paragraph has %1$d comments</item>
     </plurals>
     <string name="review_dialog_title" tools:ignore="MissingTranslation">Paragraph comments</string>
+    <string name="review_comment_count_title" tools:ignore="MissingTranslation">%1$d comments</string>
     <string name="review_anonymous_user" tools:ignore="MissingTranslation">Anonymous user</string>
     <string name="review_unknown_time" tools:ignore="MissingTranslation">Unknown time</string>
     <string name="review_user_avatar" tools:ignore="MissingTranslation">User avatar</string>
     <string name="review_like_count" tools:ignore="MissingTranslation">Likes %1$d</string>
     <string name="review_reply_count" tools:ignore="MissingTranslation">Replies %1$d</string>
+    <string name="review_expand_reply_count" tools:ignore="MissingTranslation">Expand %1$d replies</string>
+    <string name="review_collapse_replies" tools:ignore="MissingTranslation">Collapse</string>
     <string name="review_empty" tools:ignore="MissingTranslation">No comments</string>
     <string name="review_partial_warning" tools:ignore="MissingTranslation">Some comments could not be loaded. Successful items are retained.</string>
     <string name="review_retry_load_more" tools:ignore="MissingTranslation">Loading failed. Tap to retry.</string>

@@ -3,6 +3,7 @@ package io.legado.app.ui.book.read.review
 import android.content.Context
 import android.view.View
 import android.view.ViewGroup
+import android.widget.ImageView
 import io.legado.app.base.adapter.ItemViewHolder
 import io.legado.app.base.adapter.RecyclerAdapter
 import io.legado.app.databinding.ItemParagraphReviewCommentBinding
@@ -13,7 +14,7 @@ import io.legado.app.model.review.ParagraphComment
 class ParagraphReviewReplyAdapter(
     context: Context,
     private val sourceUrl: String,
-    private val onImageClick: (String) -> Unit,
+    private val onImageClick: (ImageView, String) -> Unit,
 ) : RecyclerAdapter<ParagraphReviewReplyListItem, ItemParagraphReviewReplyBinding>(context) {
 
     private var headerComment: ParagraphComment? = null

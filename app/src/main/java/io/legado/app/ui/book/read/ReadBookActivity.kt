@@ -1154,6 +1154,9 @@ class ReadBookActivity : BaseReadBookActivity(),
         val source = ReadBook.bookSource ?: return
         val textChapter = ReadBook.curTextChapter ?: return
         val chapterIdentity = textChapter.chapter.reviewIdentityOrNull() ?: return
+        val paragraph = index.paragraphs.firstOrNull {
+            it.paraId == paraId && it.count > 0
+        } ?: return
         if (!paragraphReviewReader.acceptsClick(generation) ||
             currentGeneration.sourceUrl != source.bookSourceUrl ||
             currentGeneration.bookUrl != book.bookUrl ||
@@ -1175,6 +1178,7 @@ class ReadBookActivity : BaseReadBookActivity(),
             putInt(ParagraphReviewViewModel.ARG_PARA_ID, paraId)
             putLong(ParagraphReviewViewModel.ARG_GENERATION, generation)
             putBoolean(ParagraphReviewViewModel.ARG_PARTIAL, index.partial)
+            putInt(ParagraphReviewViewModel.ARG_COMMENT_COUNT, paragraph.count)
         }
     }
 

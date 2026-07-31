@@ -5,9 +5,12 @@ import android.content.Context
 import android.widget.ImageView
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.bumptech.glide.Glide
 import com.bumptech.glide.request.RequestOptions
 import io.legado.app.R
+import io.legado.app.base.adapter.ItemViewHolder
 import io.legado.app.databinding.ItemParagraphReviewCommentBinding
+import io.legado.app.databinding.ItemParagraphReviewImageBinding
 import io.legado.app.databinding.ItemParagraphReviewReplyBinding
 import io.legado.app.help.glide.ImageLoader
 import io.legado.app.help.glide.OkHttpModelLoader
@@ -22,7 +25,8 @@ internal fun ItemParagraphReviewCommentBinding.bindParagraphReviewComment(
     sourceUrl: String,
     comment: ParagraphComment,
     repliesClickable: Boolean,
-    onImageClick: (String) -> Unit,
+    repliesExpanded: Boolean = false,
+    onImageClick: (ImageView, String) -> Unit,
 ) {
     val presentation = presentParagraphReviewComment(
         comment = comment,
@@ -35,10 +39,22 @@ internal fun ItemParagraphReviewCommentBinding.bindParagraphReviewComment(
     if (presentation.content.isBlank()) tvContent.gone() else tvContent.visible()
     tvTime.text = presentation.time
     tvLikes.text = context.getString(R.string.review_like_count, presentation.diggCount)
-    tvReplies.text = context.getString(R.string.review_reply_count, presentation.replyCount)
-    tvReplies.isEnabled = presentation.canOpenReplies
-    tvReplies.isClickable = presentation.canOpenReplies
-    tvReplies.isFocusable = presentation.canOpenReplies
+    tvReplies.text = context.getString(
+        R.string.review_expand_reply_count,
+        presentation.replyCount,
+    )
+    tvReplies.isSelected = repliesExpanded
+    val showReplyEntry = presentation.canOpenReplies && !repliesExpanded
+    tvReplies.isEnabled = showReplyEntry
+    tvReplies.isClickable = showReplyEntry
+    tvReplies.isFocusable = showReplyEntry
+    if (showReplyEntry) {
+        replyDivider.visible()
+        tvReplies.visible()
+    } else {
+        replyDivider.gone()
+        tvReplies.gone()
+    }
     ivAvatar.loadParagraphReviewAvatar(context, sourceUrl, presentation.avatarUrl)
     rvImages.bindParagraphReviewImages(context, sourceUrl, presentation.images, onImageClick)
 }
@@ -48,7 +64,7 @@ internal fun ItemParagraphReviewReplyBinding.bindParagraphReviewReply(
     context: Context,
     sourceUrl: String,
     item: ParagraphReviewReplyListItem,
-    onImageClick: (String) -> Unit,
+    onImageClick: (ImageView, String) -> Unit,
 ) {
     val presentation = presentParagraphReviewReply(
         reply = item.reply,
@@ -83,7 +99,7 @@ private fun RecyclerView.bindParagraphReviewImages(
     context: Context,
     sourceUrl: String,
     images: List<ParagraphReviewImagePresentation>,
-    onImageClick: (String) -> Unit,
+    onImageClick: (ImageView, String) -> Unit,
 ) {
     if (images.isEmpty()) {
         clearParagraphReviewImages()
@@ -111,10 +127,29 @@ private fun RecyclerView.bindParagraphReviewImages(
 
 /** 取消当前缩略图绑定并清空内层 adapter，供无图重绑和头部销毁复用。 */
 internal fun RecyclerView.clearParagraphReviewImages() {
-    (adapter as? ParagraphReviewImageAdapter)?.clearItems()
+    repeat(childCount) { index ->
+        val binding = (getChildViewHolder(getChildAt(index)) as? ItemViewHolder)
+            ?.binding as? ItemParagraphReviewImageBinding
+        binding?.ivImage?.let { imageView ->
+            Glide.with(imageView).clear(imageView)
+            imageView.setImageDrawable(null)
+        }
+    }
+    val imageAdapter = adapter as? ParagraphReviewImageAdapter
     adapter = null
+    imageAdapter?.clearItems()
     gone()
 }
+
+/** 把脱敏错误分类映射为主列表和内联回复共用的稳定文案。 */
+internal fun Context.paragraphReviewErrorText(error: ParagraphReviewUiError): String = getString(
+    when (error.kind) {
+        ParagraphReviewUiErrorKind.AUTHENTICATION -> R.string.review_error_authentication
+        ParagraphReviewUiErrorKind.NETWORK -> R.string.review_error_network
+        ParagraphReviewUiErrorKind.PROTOCOL -> R.string.review_error_protocol
+        ParagraphReviewUiErrorKind.GENERIC -> R.string.review_error_generic
+    }
+)
 
 /** 使用书源同源选项加载安全头像地址，失败时统一回退本地占位。 */
 @SuppressLint("CheckResult")

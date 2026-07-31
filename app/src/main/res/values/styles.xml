@@ -73,6 +73,11 @@
         <item name="android:textSize">20sp</item>
     </style>
 
+    <style name="ParagraphReviewDrawerAnimation">
+        <item name="android:windowEnterAnimation">@anim/paragraph_review_drawer_enter</item>
+        <item name="android:windowExitAnimation">@anim/paragraph_review_drawer_exit</item>
+    </style>
+
     //*******************Widget Style**********************************//
 
 

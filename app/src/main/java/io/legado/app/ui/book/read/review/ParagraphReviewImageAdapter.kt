@@ -3,6 +3,7 @@ package io.legado.app.ui.book.read.review
 import android.annotation.SuppressLint
 import android.content.Context
 import android.view.ViewGroup
+import android.widget.ImageView
 import com.bumptech.glide.Glide
 import com.bumptech.glide.load.engine.DiskCacheStrategy
 import com.bumptech.glide.request.RequestOptions
@@ -19,7 +20,7 @@ import kotlin.math.roundToInt
 internal class ParagraphReviewImageAdapter(
     context: Context,
     val sourceUrl: String,
-    var onImageClick: (String) -> Unit,
+    var onImageClick: (ImageView, String) -> Unit,
 ) : RecyclerAdapter<ParagraphReviewImagePresentation, ItemParagraphReviewImageBinding>(context) {
 
     /** 创建段评缩略图 ViewBinding。 */
@@ -60,7 +61,9 @@ internal class ParagraphReviewImageAdapter(
         binding: ItemParagraphReviewImageBinding,
     ) {
         binding.root.setOnClickListener {
-            getItemByLayoutPosition(holder.layoutPosition)?.url?.let(onImageClick)
+            getItemByLayoutPosition(holder.layoutPosition)?.url?.let { url ->
+                onImageClick(binding.ivImage, url)
+            }
         }
     }
 
