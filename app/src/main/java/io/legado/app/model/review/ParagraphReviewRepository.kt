@@ -4,6 +4,7 @@ import io.legado.app.data.entities.BookSource
 import io.legado.app.data.entities.rule.ReviewRule
 import io.legado.app.help.http.StrResponse
 import io.legado.app.model.analyzeRule.AnalyzeUrl
+import io.legado.app.model.review.wire.ReviewParserCapabilities
 import io.legado.app.model.review.wire.ReviewV1Parser
 import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.ensureActive
@@ -54,6 +55,7 @@ class DefaultParagraphReviewRepository(
     /** 校验能力后获取章节段评索引。 */
     override suspend fun loadIndex(source: BookSource, request: ReviewIndexRequest): ReviewIndex {
         val rule = source.requireParagraphReviewRule()
+        val capabilities = rule.reviewParserCapabilities()
         val values = ReviewTemplateValues(
             bookId = request.bookId,
             itemId = request.itemId,
@@ -66,7 +68,7 @@ class DefaultParagraphReviewRepository(
             template = rule.reviewIndexUrl!!,
             values = values,
         ) { body ->
-            ReviewV1Parser.parseIndex(body, request)
+            ReviewV1Parser.parseIndex(body, request, capabilities)
         }
     }
 
@@ -77,6 +79,7 @@ class DefaultParagraphReviewRepository(
         usedCursors: Set<String>,
     ): ParagraphCommentPage {
         val rule = source.requireParagraphReviewRule()
+        val capabilities = rule.reviewParserCapabilities()
         val values = ReviewTemplateValues(
             bookId = request.bookId,
             itemId = request.itemId,
@@ -92,7 +95,7 @@ class DefaultParagraphReviewRepository(
             template = rule.reviewUrl!!,
             values = values,
         ) { body ->
-            ReviewV1Parser.parseCommentPage(body, request, usedCursors)
+            ReviewV1Parser.parseCommentPage(body, request, usedCursors, capabilities)
         }
     }
 
@@ -103,6 +106,7 @@ class DefaultParagraphReviewRepository(
         usedCursors: Set<String>,
     ): ParagraphReplyPage {
         val rule = source.requireParagraphReviewRule()
+        val capabilities = rule.reviewParserCapabilities()
         val values = ReviewTemplateValues(
             bookId = request.bookId,
             itemId = request.itemId,
@@ -117,7 +121,7 @@ class DefaultParagraphReviewRepository(
             template = rule.reviewQuoteUrl!!,
             values = values,
         ) { body ->
-            ReviewV1Parser.parseReplyPage(body, request, usedCursors)
+            ReviewV1Parser.parseReplyPage(body, request, usedCursors, capabilities)
         }
     }
 
@@ -223,3 +227,7 @@ private fun BookSource.requireParagraphReviewRule(): ReviewRule {
     }
     return rule
 }
+
+/** 根据书源图片选择器生成三个端点共用的解析能力。 */
+private fun ReviewRule.reviewParserCapabilities(): ReviewParserCapabilities =
+    ReviewParserCapabilities(requireImages = supportsParagraphCommentImagesV1())

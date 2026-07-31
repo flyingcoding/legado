@@ -69,7 +69,7 @@ class OkHttpStreamFetcher(
         }
 
         analyzedUrl = AnalyzeUrl(
-            url.toString(),
+            url.fetchUrl(),
             source = source,
             coroutineContext = coroutineContext
         ).getGlideUrl()
@@ -129,7 +129,7 @@ class OkHttpStreamFetcher(
             val decodeResult = runScriptWithContext(coroutineContext) {
                 if (manga) {
                     ImageUtils.decode(
-                        url.toString(),
+                        url.fetchUrl(),
                         responseBody!!.bytes(),
                         isCover = false,
                         source,
@@ -162,3 +162,7 @@ class OkHttpStreamFetcher(
     }
 
 }
+
+/** 为脱敏模型返回真实地址，同时保持普通 GlideUrl 的既有规则字符串语义。 */
+internal fun GlideUrl.fetchUrl(): String =
+    if (this is RedactedGlideUrl) analyzeUrlInput() else toString()

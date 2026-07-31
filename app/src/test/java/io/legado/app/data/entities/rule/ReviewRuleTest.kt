@@ -10,7 +10,6 @@ import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
-import java.io.File
 
 class ReviewRuleTest {
 
@@ -74,6 +73,40 @@ class ReviewRuleTest {
         assertFalse(ReviewRule().supportsParagraphCommentsV1())
     }
 
+    /** 验证图片能力要求基础合同和十个图片选择器同时完整。 */
+    @Test
+    fun supportsParagraphCommentImagesV1_requiresEveryImageRule() {
+        val imageRule = completeRule(includeOptionalFields = true)
+        assertTrue(imageRule.supportsParagraphCommentImagesV1())
+        assertTrue(completeRule().supportsParagraphCommentsV1())
+        assertFalse(completeRule().supportsParagraphCommentImagesV1())
+
+        val expectedFields = linkedSetOf(
+            "imageListRule",
+            "imageUrlRule",
+            "imageWidthRule",
+            "imageHeightRule",
+            "imageFormatRule",
+            "quoteImageListRule",
+            "quoteImageUrlRule",
+            "quoteImageWidthRule",
+            "quoteImageHeightRule",
+            "quoteImageFormatRule",
+        )
+        assertEquals(expectedFields, imageRule.paragraphCommentImagesV1RequiredFields.keys)
+        val json = INITIAL_GSON.toJsonTree(imageRule).asJsonObject
+        expectedFields.forEach { field ->
+            val incomplete = INITIAL_GSON.fromJson(
+                json.deepCopy().apply { remove(field) },
+                ReviewRule::class.java,
+            )
+            assertTrue(field, incomplete.supportsParagraphCommentsV1())
+            assertFalse(field, incomplete.supportsParagraphCommentImagesV1())
+        }
+        assertFalse(GSON.toJson(imageRule).contains("paragraphCommentImagesV1RequiredFields"))
+        assertFalse(GSON.toJson(imageRule).contains("supportsParagraphCommentImagesV1"))
+    }
+
     /** 验证 Room converter 对完整规则、null 和畸形内容的安全往返。 */
     @Test
     fun converter_roundTripsKnownFieldsAndHandlesInvalidJson() {
@@ -89,14 +122,24 @@ class ReviewRuleTest {
         assertEquals("null", converters.reviewRuleToString(null))
     }
 
-    /** 验证仓库示例书源可导入并通过 Room converter 保持完整 v1 规则。 */
+    /** 验证合成书源 JSON 可导入并通过 Room converter 保持完整图片规则。 */
     @Test
-    fun documentedSample_importsAndRoundTripsReviewRule() {
-        val source = GSON.fromJsonArray<BookSource>(sampleSourceFile().readText())
+    fun imageRuleSourceJson_importsAndRoundTripsWithoutWorkspaceDocs() {
+        val expectedRule = completeRule(includeOptionalFields = true)
+        val sourceJson = """[{
+          "bookSourceUrl":"https://example.com",
+          "bookSourceName":"image-review-source",
+          "ruleReview":${GSON.toJson(expectedRule)}
+        }]""".trimIndent()
+
+        val source = GSON.fromJsonArray<BookSource>(sourceJson)
             .getOrThrow()
             .single()
         val reviewRule = source.ruleReview
         assertTrue(reviewRule?.supportsParagraphCommentsV1() == true)
+        assertTrue(reviewRule?.supportsParagraphCommentImagesV1() == true)
+        assertEquals(expectedRule.paragraphCommentImagesV1RequiredFields, reviewRule
+            ?.paragraphCommentImagesV1RequiredFields)
         assertEquals(ReviewRule.DEBUG_HTTP_TRANSPORT_POLICY, reviewRule?.transportPolicy)
         assertEquals(
             ReviewRule.FANQIE_PARAGRAPH_INDEX_MAPPING_MODE,
@@ -249,6 +292,11 @@ class ReviewRuleTest {
         userNameRule = "$.user_name".takeIf { includeOptionalFields },
         avatarRule = "$.user_avatar".takeIf { includeOptionalFields },
         contentRule = "$.text",
+        imageListRule = "$.images".takeIf { includeOptionalFields },
+        imageUrlRule = "$.url".takeIf { includeOptionalFields },
+        imageWidthRule = "$.width".takeIf { includeOptionalFields },
+        imageHeightRule = "$.height".takeIf { includeOptionalFields },
+        imageFormatRule = "$.format".takeIf { includeOptionalFields },
         postTimeRule = "$.create_timestamp",
         voteUpCountRule = "$.digg_count",
         quoteCountRule = "$.reply_count",
@@ -261,15 +309,14 @@ class ReviewRuleTest {
         quoteUserNameRule = "$.user_name".takeIf { includeOptionalFields },
         quoteAvatarRule = "$.user_avatar".takeIf { includeOptionalFields },
         quoteContentRule = "$.text",
+        quoteImageListRule = "$.images".takeIf { includeOptionalFields },
+        quoteImageUrlRule = "$.url".takeIf { includeOptionalFields },
+        quoteImageWidthRule = "$.width".takeIf { includeOptionalFields },
+        quoteImageHeightRule = "$.height".takeIf { includeOptionalFields },
+        quoteImageFormatRule = "$.format".takeIf { includeOptionalFields },
         quotePostTimeRule = "$.create_timestamp",
         quoteVoteUpCountRule = "$.digg_count",
         quoteChildrenRule = "$.children".takeIf { includeOptionalFields },
     )
 
-    /** 定位版本库中的权威 v1 示例书源。 */
-    private fun sampleSourceFile(): File = sequenceOf(
-        File("docs/fanqie-integration/fanqie-legado-source.json"),
-        File("../docs/fanqie-integration/fanqie-legado-source.json"),
-    ).firstOrNull { it.isFile }
-        ?: error("未找到 fanqie-legado-source.json")
 }

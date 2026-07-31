@@ -12,6 +12,7 @@ class ParagraphReviewCommentAdapter(
     context: Context,
     private val sourceUrl: String,
     private val onRepliesClick: (ParagraphComment) -> Unit,
+    private val onImageClick: (String) -> Unit,
 ) : RecyclerAdapter<ParagraphComment, ItemParagraphReviewCommentBinding>(context) {
 
     /** 创建主评 item 的 ViewBinding。 */
@@ -30,6 +31,7 @@ class ParagraphReviewCommentAdapter(
             sourceUrl = sourceUrl,
             comment = item,
             repliesClickable = true,
+            onImageClick = onImageClick,
         )
     }
 

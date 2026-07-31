@@ -805,6 +805,7 @@
     <string name="review_replies_title">评论回复</string>
     <string name="review_reply_to_user">回复 %1$s</string>
     <string name="review_reply_empty">暂无回复</string>
+    <string name="review_image">段评图片</string>
     <string name="rule_review_contract">段评合同版本（contractVersion）</string>
     <string name="rule_review_transport_policy">段评传输策略（transportPolicy）</string>
     <string name="rule_review_paragraph_mapping_mode">段落映射模式（paragraphMappingMode）</string>
@@ -820,6 +821,11 @@
     <string name="rule_comment_user_name">主评用户名规则，可选（userNameRule）</string>
     <string name="rule_comment_avatar">主评头像规则，可选（avatarRule）</string>
     <string name="rule_comment_content">主评正文规则（contentRule）</string>
+    <string name="rule_comment_image_list">主评图片列表规则（imageListRule）</string>
+    <string name="rule_comment_image_url">主评图片 URL 规则（imageUrlRule）</string>
+    <string name="rule_comment_image_width">主评图片宽度规则（imageWidthRule）</string>
+    <string name="rule_comment_image_height">主评图片高度规则（imageHeightRule）</string>
+    <string name="rule_comment_image_format">主评图片格式规则（imageFormatRule）</string>
     <string name="rule_comment_post_time">主评发布时间规则（postTimeRule）</string>
     <string name="rule_comment_vote_up_count">主评点赞数规则（voteUpCountRule）</string>
     <string name="rule_comment_quote_count">主评回复数规则（quoteCountRule）</string>
@@ -832,6 +838,11 @@
     <string name="rule_quote_user_name">回复用户名规则，可选（quoteUserNameRule）</string>
     <string name="rule_quote_avatar">回复头像规则，可选（quoteAvatarRule）</string>
     <string name="rule_quote_content">回复正文规则（quoteContentRule）</string>
+    <string name="rule_quote_image_list">回复图片列表规则（quoteImageListRule）</string>
+    <string name="rule_quote_image_url">回复图片 URL 规则（quoteImageUrlRule）</string>
+    <string name="rule_quote_image_width">回复图片宽度规则（quoteImageWidthRule）</string>
+    <string name="rule_quote_image_height">回复图片高度规则（quoteImageHeightRule）</string>
+    <string name="rule_quote_image_format">回复图片格式规则（quoteImageFormatRule）</string>
     <string name="rule_quote_post_time">回复发布时间规则（quotePostTimeRule）</string>
     <string name="rule_quote_vote_up_count">回复点赞数规则（quoteVoteUpCountRule）</string>
     <string name="rule_quote_children">嵌套回复规则，可选（quoteChildrenRule）</string>

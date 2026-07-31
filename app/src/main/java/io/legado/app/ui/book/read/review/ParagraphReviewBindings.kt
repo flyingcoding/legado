@@ -3,6 +3,8 @@ package io.legado.app.ui.book.read.review
 import android.annotation.SuppressLint
 import android.content.Context
 import android.widget.ImageView
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.request.RequestOptions
 import io.legado.app.R
 import io.legado.app.databinding.ItemParagraphReviewCommentBinding
@@ -20,6 +22,7 @@ internal fun ItemParagraphReviewCommentBinding.bindParagraphReviewComment(
     sourceUrl: String,
     comment: ParagraphComment,
     repliesClickable: Boolean,
+    onImageClick: (String) -> Unit,
 ) {
     val presentation = presentParagraphReviewComment(
         comment = comment,
@@ -29,6 +32,7 @@ internal fun ItemParagraphReviewCommentBinding.bindParagraphReviewComment(
     )
     tvUser.text = presentation.userName
     tvContent.text = presentation.content
+    if (presentation.content.isBlank()) tvContent.gone() else tvContent.visible()
     tvTime.text = presentation.time
     tvLikes.text = context.getString(R.string.review_like_count, presentation.diggCount)
     tvReplies.text = context.getString(R.string.review_reply_count, presentation.replyCount)
@@ -36,6 +40,7 @@ internal fun ItemParagraphReviewCommentBinding.bindParagraphReviewComment(
     tvReplies.isClickable = presentation.canOpenReplies
     tvReplies.isFocusable = presentation.canOpenReplies
     ivAvatar.loadParagraphReviewAvatar(context, sourceUrl, presentation.avatarUrl)
+    rvImages.bindParagraphReviewImages(context, sourceUrl, presentation.images, onImageClick)
 }
 
 /** 把回复展示模型绑定为纯文本、显式回复目标和受限视觉缩进。 */
@@ -43,6 +48,7 @@ internal fun ItemParagraphReviewReplyBinding.bindParagraphReviewReply(
     context: Context,
     sourceUrl: String,
     item: ParagraphReviewReplyListItem,
+    onImageClick: (String) -> Unit,
 ) {
     val presentation = presentParagraphReviewReply(
         reply = item.reply,
@@ -64,10 +70,50 @@ internal fun ItemParagraphReviewReplyBinding.bindParagraphReviewReply(
         tvReplyTo.gone()
     }
     tvContent.text = presentation.content
+    if (presentation.content.isBlank()) tvContent.gone() else tvContent.visible()
     tvTime.text = presentation.time
     tvLikes.text = context.getString(R.string.review_like_count, presentation.diggCount)
     tvReplies.text = context.getString(R.string.review_reply_count, presentation.replyCount)
     ivAvatar.loadParagraphReviewAvatar(context, sourceUrl, presentation.avatarUrl)
+    rvImages.bindParagraphReviewImages(context, sourceUrl, presentation.images, onImageClick)
+}
+
+/** 绑定横向缩略图列表，并在无图时先清空旧数据再隐藏容器。 */
+private fun RecyclerView.bindParagraphReviewImages(
+    context: Context,
+    sourceUrl: String,
+    images: List<ParagraphReviewImagePresentation>,
+    onImageClick: (String) -> Unit,
+) {
+    if (images.isEmpty()) {
+        clearParagraphReviewImages()
+        return
+    }
+    val imageAdapter = (adapter as? ParagraphReviewImageAdapter)
+        ?.takeIf { it.sourceUrl == sourceUrl }
+        ?: ParagraphReviewImageAdapter(context, sourceUrl, onImageClick).also {
+            layoutManager = LinearLayoutManager(
+                context,
+                LinearLayoutManager.HORIZONTAL,
+                false,
+            ).apply {
+                isItemPrefetchEnabled = false
+            }
+            adapter = it
+        }
+    imageAdapter.onImageClick = onImageClick
+    if (imageAdapter.getItems() != images) {
+        imageAdapter.setItems(images)
+        scrollToPosition(0)
+    }
+    visible()
+}
+
+/** 取消当前缩略图绑定并清空内层 adapter，供无图重绑和头部销毁复用。 */
+internal fun RecyclerView.clearParagraphReviewImages() {
+    (adapter as? ParagraphReviewImageAdapter)?.clearItems()
+    adapter = null
+    gone()
 }
 
 /** 使用书源同源选项加载安全头像地址，失败时统一回退本地占位。 */

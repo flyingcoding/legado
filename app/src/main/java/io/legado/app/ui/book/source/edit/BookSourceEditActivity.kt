@@ -390,6 +390,29 @@ class BookSourceEditActivity :
             add(EditEntity("userNameRule", rr.userNameRule, R.string.rule_comment_user_name))
             add(EditEntity("avatarRule", rr.avatarRule, R.string.rule_comment_avatar))
             add(EditEntity("contentRule", rr.contentRule, R.string.rule_comment_content))
+            add(EditEntity("imageListRule", rr.imageListRule, R.string.rule_comment_image_list))
+            add(EditEntity("imageUrlRule", rr.imageUrlRule, R.string.rule_comment_image_url))
+            add(
+                EditEntity(
+                    "imageWidthRule",
+                    rr.imageWidthRule,
+                    R.string.rule_comment_image_width
+                )
+            )
+            add(
+                EditEntity(
+                    "imageHeightRule",
+                    rr.imageHeightRule,
+                    R.string.rule_comment_image_height
+                )
+            )
+            add(
+                EditEntity(
+                    "imageFormatRule",
+                    rr.imageFormatRule,
+                    R.string.rule_comment_image_format
+                )
+            )
             add(EditEntity("postTimeRule", rr.postTimeRule, R.string.rule_comment_post_time))
             add(
                 EditEntity(
@@ -414,6 +437,41 @@ class BookSourceEditActivity :
             )
             add(EditEntity("quoteAvatarRule", rr.quoteAvatarRule, R.string.rule_quote_avatar))
             add(EditEntity("quoteContentRule", rr.quoteContentRule, R.string.rule_quote_content))
+            add(
+                EditEntity(
+                    "quoteImageListRule",
+                    rr.quoteImageListRule,
+                    R.string.rule_quote_image_list
+                )
+            )
+            add(
+                EditEntity(
+                    "quoteImageUrlRule",
+                    rr.quoteImageUrlRule,
+                    R.string.rule_quote_image_url
+                )
+            )
+            add(
+                EditEntity(
+                    "quoteImageWidthRule",
+                    rr.quoteImageWidthRule,
+                    R.string.rule_quote_image_width
+                )
+            )
+            add(
+                EditEntity(
+                    "quoteImageHeightRule",
+                    rr.quoteImageHeightRule,
+                    R.string.rule_quote_image_height
+                )
+            )
+            add(
+                EditEntity(
+                    "quoteImageFormatRule",
+                    rr.quoteImageFormatRule,
+                    R.string.rule_quote_image_format
+                )
+            )
             add(
                 EditEntity(
                     "quotePostTimeRule",

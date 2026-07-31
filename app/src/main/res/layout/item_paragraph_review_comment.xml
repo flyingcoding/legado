@@ -64,7 +64,7 @@
         android:textColor="@color/tv_text_summary"
         android:textSize="12sp"
         app:layout_constraintEnd_toStartOf="@id/tv_replies"
-        app:layout_constraintTop_toBottomOf="@id/tv_content"
+        app:layout_constraintTop_toBottomOf="@id/rv_images"
         tools:text="赞 12" />
 
     <TextView
@@ -79,7 +79,24 @@
         android:textColor="@color/accent"
         android:textSize="12sp"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/tv_content"
+        app:layout_constraintTop_toBottomOf="@id/rv_images"
         tools:text="回复 3" />
+
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/rv_images"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:nestedScrollingEnabled="false"
+        android:orientation="horizontal"
+        android:overScrollMode="never"
+        android:visibility="gone"
+        app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="@id/tv_user"
+        app:layout_constraintTop_toBottomOf="@id/tv_content"
+        tools:itemCount="3"
+        tools:listitem="@layout/item_paragraph_review_image"
+        tools:visibility="visible" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

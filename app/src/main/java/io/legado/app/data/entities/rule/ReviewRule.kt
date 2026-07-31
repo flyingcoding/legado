@@ -22,6 +22,11 @@ data class ReviewRule(
     var userNameRule: String? = null,
     var avatarRule: String? = null,
     var contentRule: String? = null,
+    var imageListRule: String? = null,
+    var imageUrlRule: String? = null,
+    var imageWidthRule: String? = null,
+    var imageHeightRule: String? = null,
+    var imageFormatRule: String? = null,
     var postTimeRule: String? = null,
     var voteUpCountRule: String? = null,
     var quoteCountRule: String? = null,
@@ -34,6 +39,11 @@ data class ReviewRule(
     var quoteUserNameRule: String? = null,
     var quoteAvatarRule: String? = null,
     var quoteContentRule: String? = null,
+    var quoteImageListRule: String? = null,
+    var quoteImageUrlRule: String? = null,
+    var quoteImageWidthRule: String? = null,
+    var quoteImageHeightRule: String? = null,
+    var quoteImageFormatRule: String? = null,
     var quotePostTimeRule: String? = null,
     var quoteVoteUpCountRule: String? = null,
     var quoteChildrenRule: String? = null,
@@ -68,6 +78,26 @@ data class ReviewRule(
     fun supportsParagraphCommentsV1(): Boolean =
         contractVersion == PARAGRAPH_COMMENTS_V1_CONTRACT &&
             paragraphCommentsV1RequiredFields.values.all { !it.isNullOrBlank() }
+
+    /** fanqie 段评图片 v1 必填规则及其当前值。 */
+    val paragraphCommentImagesV1RequiredFields: Map<String, String?>
+        get() = linkedMapOf(
+            "imageListRule" to imageListRule,
+            "imageUrlRule" to imageUrlRule,
+            "imageWidthRule" to imageWidthRule,
+            "imageHeightRule" to imageHeightRule,
+            "imageFormatRule" to imageFormatRule,
+            "quoteImageListRule" to quoteImageListRule,
+            "quoteImageUrlRule" to quoteImageUrlRule,
+            "quoteImageWidthRule" to quoteImageWidthRule,
+            "quoteImageHeightRule" to quoteImageHeightRule,
+            "quoteImageFormatRule" to quoteImageFormatRule,
+        )
+
+    /** 判断当前规则是否完整声明段评和回复图片选择器。 */
+    fun supportsParagraphCommentImagesV1(): Boolean =
+        supportsParagraphCommentsV1() &&
+            paragraphCommentImagesV1RequiredFields.values.all { !it.isNullOrBlank() }
 
     companion object {
 

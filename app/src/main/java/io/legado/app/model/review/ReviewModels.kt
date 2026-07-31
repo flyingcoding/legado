@@ -51,6 +51,7 @@ enum class ReviewWarningScope {
 data class ParagraphComment(
     val commentId: String,
     val text: String,
+    val images: List<ParagraphCommentImage>,
     val userId: String?,
     val userName: String?,
     val userAvatar: String?,
@@ -64,6 +65,14 @@ data class ParagraphComment(
     val replyNextCursor: String?,
 )
 
+/** 保存校验后的段评图片及服务端原始尺寸。 */
+data class ParagraphCommentImage(
+    val url: String,
+    val width: Long,
+    val height: Long,
+    val format: String?,
+)
+
 /** 保存严格校验后的回复及其当前子树。 */
 data class ParagraphReply(
     val replyId: String,
@@ -71,6 +80,7 @@ data class ParagraphReply(
     val replyToCommentId: String?,
     val replyToReplyId: String?,
     val text: String,
+    val images: List<ParagraphCommentImage>,
     val userId: String?,
     val userName: String?,
     val userAvatar: String?,

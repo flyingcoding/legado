@@ -13,6 +13,7 @@ import io.legado.app.model.review.ParagraphComment
 class ParagraphReviewReplyAdapter(
     context: Context,
     private val sourceUrl: String,
+    private val onImageClick: (String) -> Unit,
 ) : RecyclerAdapter<ParagraphReviewReplyListItem, ItemParagraphReviewReplyBinding>(context) {
 
     private var headerComment: ParagraphComment? = null
@@ -31,6 +32,7 @@ class ParagraphReviewReplyAdapter(
 
     /** 释放已销毁视图树中的头部绑定，保留所选主评供下一视图重建。 */
     fun releaseHeaderBinding() {
+        headerBinding?.rvImages?.clearParagraphReviewImages()
         headerBinding = null
     }
 
@@ -45,6 +47,7 @@ class ParagraphReviewReplyAdapter(
     private fun bindHeader(binding: ItemParagraphReviewCommentBinding) {
         val comment = headerComment
         if (comment == null) {
+            binding.rvImages.clearParagraphReviewImages()
             binding.root.visibility = View.GONE
             return
         }
@@ -54,6 +57,7 @@ class ParagraphReviewReplyAdapter(
             sourceUrl = sourceUrl,
             comment = comment,
             repliesClickable = false,
+            onImageClick = onImageClick,
         )
     }
 
@@ -68,7 +72,7 @@ class ParagraphReviewReplyAdapter(
         item: ParagraphReviewReplyListItem,
         payloads: MutableList<Any>,
     ) {
-        binding.bindParagraphReviewReply(context, sourceUrl, item)
+        binding.bindParagraphReviewReply(context, sourceUrl, item, onImageClick)
     }
 
     /** 回复列表没有可触发的写操作或下钻事件。 */

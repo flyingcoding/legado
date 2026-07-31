@@ -6,6 +6,7 @@ import com.google.gson.JsonObject
 import com.google.gson.reflect.TypeToken
 import io.legado.app.model.review.PARAGRAPH_REVIEW_CONTRACT_V1
 import io.legado.app.model.review.ParagraphComment
+import io.legado.app.model.review.ParagraphCommentImage
 import io.legado.app.model.review.ParagraphCommentPage
 import io.legado.app.model.review.ParagraphCommentPageRequest
 import io.legado.app.model.review.ParagraphReply
@@ -19,11 +20,20 @@ import io.legado.app.model.review.ReviewWarning
 import io.legado.app.model.review.ReviewWarningScope
 import io.legado.app.utils.GSONStrict
 import io.legado.app.utils.fromJsonObject
+import okhttp3.HttpUrl.Companion.toHttpUrlOrNull
+
+/** 控制段评解析器是否要求服务端显式返回图片数组。 */
+data class ReviewParserCapabilities(
+    val requireImages: Boolean = false,
+)
 
 /** 严格解析并映射 fanqie 段评 v1 响应。 */
 object ReviewV1Parser {
 
     private const val MAX_CURSOR_BYTES = 4096
+    private const val MAX_IMAGES_PER_ITEM = 50
+    private const val MAX_IMAGE_URL_BYTES = 4096
+    private const val MAX_IMAGE_FORMAT_BYTES = 64
     private const val MAX_REPLY_NODES = 4096
     private val decimalIdRegex = Regex("^[0-9]+$")
     private val knownErrorTypes = setOf(
@@ -73,11 +83,15 @@ object ReviewV1Parser {
     )
 
     /** 解析并校验章节段评索引响应。 */
-    fun parseIndex(body: String?, request: ReviewIndexRequest): ReviewIndex {
+    fun parseIndex(
+        body: String?,
+        request: ReviewIndexRequest,
+        capabilities: ReviewParserCapabilities = ReviewParserCapabilities(),
+    ): ReviewIndex {
         val root = parseRoot(body)
         validateSuccessEnvelope(root)
         val dataObject = root.requiredObject("data", "data")
-        validateIndexShape(dataObject)
+        validateIndexShape(dataObject, capabilities)
         val envelope = decodeEnvelope<ReviewIndexWire>(root)
         val wire = envelope.data ?: protocol("data 缺失")
         requireIdentity("item_id", request.itemId, wire.itemId)
@@ -85,7 +99,7 @@ object ReviewV1Parser {
         requireIdentity("item_version", request.itemVersion, wire.itemVersion)
 
         val paragraphs = wire.paragraphs.orEmpty().mapIndexed { index, paragraph ->
-            paragraph.toDomain("data.paragraphs[$index]")
+            paragraph.toDomain("data.paragraphs[$index]", capabilities)
         }
         if (paragraphs.zipWithNext().any { (left, right) -> left.paraId >= right.paraId }) {
             protocol("paragraphs 未按 para_id 严格升序")
@@ -109,11 +123,12 @@ object ReviewV1Parser {
         body: String?,
         request: ParagraphCommentPageRequest,
         usedCursors: Set<String> = emptySet(),
+        capabilities: ReviewParserCapabilities = ReviewParserCapabilities(),
     ): ParagraphCommentPage {
         val root = parseRoot(body)
         validateSuccessEnvelope(root)
         val dataObject = root.requiredObject("data", "data")
-        validateCommentPageShape(dataObject)
+        validateCommentPageShape(dataObject, capabilities)
         val wire = decodeEnvelope<ParagraphCommentPageWire>(root).data
             ?: protocol("data 缺失")
         requireIdentity("item_id", request.itemId, wire.itemId)
@@ -122,7 +137,7 @@ object ReviewV1Parser {
         if (wire.paraId != request.paraId) protocol("para_id 与请求不一致")
 
         val comments = wire.comments.orEmpty().mapIndexed { index, comment ->
-            comment.toDomain("data.comments[$index]")
+            comment.toDomain("data.comments[$index]", capabilities)
         }
         val cursor = normalizeCursor(wire.hasMore!!, wire.nextCursor!!, request.cursor, usedCursors)
         return ParagraphCommentPage(
@@ -142,11 +157,12 @@ object ReviewV1Parser {
         body: String?,
         request: ParagraphReplyPageRequest,
         usedCursors: Set<String> = emptySet(),
+        capabilities: ReviewParserCapabilities = ReviewParserCapabilities(),
     ): ParagraphReplyPage {
         val root = parseRoot(body)
         validateSuccessEnvelope(root)
         val dataObject = root.requiredObject("data", "data")
-        validateReplyPageShape(dataObject)
+        validateReplyPageShape(dataObject, capabilities)
         val wire = decodeEnvelope<ParagraphReplyPageWire>(root).data
             ?: protocol("data 缺失")
         requireIdentity("item_id", request.itemId, wire.itemId)
@@ -155,7 +171,7 @@ object ReviewV1Parser {
 
         val counter = intArrayOf(0)
         val replies = wire.replies.orEmpty().mapIndexed { index, reply ->
-            reply.toDomain("data.replies[$index]", request.commentId, counter)
+            reply.toDomain("data.replies[$index]", request.commentId, counter, capabilities)
         }
         val cursor = normalizeCursor(wire.hasMore!!, wire.nextCursor!!, request.cursor, usedCursors)
         return ParagraphReplyPage(
@@ -235,7 +251,7 @@ object ReviewV1Parser {
     }
 
     /** 校验章节索引 data 的必返 JSON 类型。 */
-    private fun validateIndexShape(data: JsonObject) {
+    private fun validateIndexShape(data: JsonObject, capabilities: ReviewParserCapabilities) {
         data.requiredId("item_id", "data.item_id")
         data.requiredId("book_id", "data.book_id", allowEmpty = true)
         data.requiredString("item_version", "data.item_version")
@@ -251,6 +267,7 @@ object ReviewV1Parser {
                     validateCommentShape(
                         comment.requiredObject("data.paragraphs[$index].comments[$commentIndex]"),
                         "data.paragraphs[$index].comments[$commentIndex]",
+                        capabilities,
                     )
                 }
         }
@@ -266,13 +283,17 @@ object ReviewV1Parser {
     }
 
     /** 校验主评分页 data 的必返 JSON 类型。 */
-    private fun validateCommentPageShape(data: JsonObject) {
+    private fun validateCommentPageShape(data: JsonObject, capabilities: ReviewParserCapabilities) {
         data.requiredId("item_id", "data.item_id")
         data.requiredId("book_id", "data.book_id")
         data.requiredString("item_version", "data.item_version")
         data.requiredInt("para_id", "data.para_id", nonNegative = true)
         data.requiredArray("comments", "data.comments").forEachIndexed { index, comment ->
-            validateCommentShape(comment.requiredObject("data.comments[$index]"), "data.comments[$index]")
+            validateCommentShape(
+                comment.requiredObject("data.comments[$index]"),
+                "data.comments[$index]",
+                capabilities,
+            )
         }
         data.requiredInt("total", "data.total", nonNegative = true)
         data.requiredBoolean("has_more", "data.has_more")
@@ -280,9 +301,14 @@ object ReviewV1Parser {
     }
 
     /** 校验主评字段以及 eager 回复字段的一致性。 */
-    private fun validateCommentShape(comment: JsonObject, path: String) {
+    private fun validateCommentShape(
+        comment: JsonObject,
+        path: String,
+        capabilities: ReviewParserCapabilities,
+    ) {
         val commentId = comment.requiredId("comment_id", "$path.comment_id")
         comment.requiredString("text", "$path.text")
+        comment.validateImagesShape(path, capabilities.requireImages)
         comment.optionalId("user_id", "$path.user_id")
         comment.optionalString("user_name", "$path.user_name")
         comment.optionalString("user_avatar", "$path.user_avatar")
@@ -298,6 +324,7 @@ object ReviewV1Parser {
                     "$path.replies[$index]",
                     commentId,
                     counter,
+                    capabilities,
                 )
             }
             comment.requiredInt("reply_total", "$path.reply_total", nonNegative = true)
@@ -313,7 +340,7 @@ object ReviewV1Parser {
     }
 
     /** 校验回复页 data 的必返 JSON 类型。 */
-    private fun validateReplyPageShape(data: JsonObject) {
+    private fun validateReplyPageShape(data: JsonObject, capabilities: ReviewParserCapabilities) {
         data.requiredId("item_id", "data.item_id")
         data.requiredId("book_id", "data.book_id")
         val commentId = data.requiredId("comment_id", "data.comment_id")
@@ -324,6 +351,7 @@ object ReviewV1Parser {
                 "data.replies[$index]",
                 commentId,
                 counter,
+                capabilities,
             )
         }
         data.requiredInt("total", "data.total", nonNegative = true)
@@ -337,6 +365,7 @@ object ReviewV1Parser {
         path: String,
         expectedCommentId: String,
         counter: IntArray,
+        capabilities: ReviewParserCapabilities,
     ) {
         counter[0]++
         if (counter[0] > MAX_REPLY_NODES) protocol("单页回复节点超过上限")
@@ -349,6 +378,7 @@ object ReviewV1Parser {
             protocol("$path.reply_to_comment_id 与主评不一致")
         }
         reply.requiredString("text", "$path.text")
+        reply.validateImagesShape(path, capabilities.requireImages)
         reply.optionalString("user_name", "$path.user_name")
         reply.optionalString("user_avatar", "$path.user_avatar")
         reply.optionalString("reply_to_user_name", "$path.reply_to_user_name")
@@ -361,29 +391,68 @@ object ReviewV1Parser {
                 "$path.children[$index]",
                 expectedCommentId,
                 counter,
+                capabilities,
             )
         }
     }
 
+    /** 校验图片字段的原始 JSON shape、数量、URL、尺寸和格式。 */
+    private fun JsonObject.validateImagesShape(path: String, requireImages: Boolean) {
+        val element = get("images")
+        if (element == null || element.isJsonNull) {
+            if (requireImages) protocol("$path.images 缺失或类型错误")
+            return
+        }
+        val images = element.takeIf { it.isJsonArray }?.asJsonArray
+            ?: protocol("$path.images 类型错误")
+        if (images.size() > MAX_IMAGES_PER_ITEM) protocol("$path.images 超过数量上限")
+        images.forEachIndexed { index, imageElement ->
+            val imagePath = "$path.images[$index]"
+            val image = imageElement.requiredObject(imagePath)
+            val url = image.requiredString("url", "$imagePath.url")
+            if (url.isEmpty() || url.toByteArray(Charsets.UTF_8).size > MAX_IMAGE_URL_BYTES) {
+                protocol("$imagePath.url 无效")
+            }
+            val parsed = url.toHttpUrlOrNull()
+            if (parsed == null || parsed.scheme !in setOf("http", "https")) {
+                protocol("$imagePath.url 无效")
+            }
+            image.requiredLong("width", "$imagePath.width", nonNegative = true)
+            image.requiredLong("height", "$imagePath.height", nonNegative = true)
+            image.optionalString("format", "$imagePath.format")?.trim()?.let { format ->
+                if (format.toByteArray(Charsets.UTF_8).size > MAX_IMAGE_FORMAT_BYTES) {
+                    protocol("$imagePath.format 超过长度上限")
+                }
+            }
+        }
+    }
+
     /** 把段落 wire 数据映射为非空领域模型。 */
-    private fun ReviewParagraphWire.toDomain(path: String): ReviewParagraph = ReviewParagraph(
+    private fun ReviewParagraphWire.toDomain(
+        path: String,
+        capabilities: ReviewParserCapabilities,
+    ): ReviewParagraph = ReviewParagraph(
         paraId = paraId ?: protocol("$path.para_id 缺失"),
         count = count ?: protocol("$path.count 缺失"),
         hot = hot ?: protocol("$path.hot 缺失"),
         userCount = userCount ?: protocol("$path.user_count 缺失"),
         detailLoaded = detailLoaded ?: protocol("$path.detail_loaded 缺失"),
         comments = comments.orEmpty().mapIndexed { index, comment ->
-            comment.toDomain("$path.comments[$index]")
+            comment.toDomain("$path.comments[$index]", capabilities)
         },
     )
 
     /** 把主评 wire 数据映射为非空领域模型。 */
-    private fun ParagraphCommentWire.toDomain(path: String): ParagraphComment {
+    private fun ParagraphCommentWire.toDomain(
+        path: String,
+        capabilities: ReviewParserCapabilities,
+    ): ParagraphComment {
         val commentId = commentId ?: protocol("$path.comment_id 缺失")
         val counter = intArrayOf(0)
         return ParagraphComment(
             commentId = commentId,
             text = text ?: protocol("$path.text 缺失"),
+            images = parseImages(images, capabilities.requireImages, "$path.images"),
             userId = userId,
             userName = userName,
             userAvatar = userAvatar,
@@ -392,7 +461,7 @@ object ReviewV1Parser {
             replyCount = replyCount ?: protocol("$path.reply_count 缺失"),
             repliesLoaded = repliesLoaded ?: protocol("$path.replies_loaded 缺失"),
             replies = replies.orEmpty().mapIndexed { index, reply ->
-                reply.toDomain("$path.replies[$index]", commentId, counter)
+                reply.toDomain("$path.replies[$index]", commentId, counter, capabilities)
             },
             replyTotal = replyTotal,
             replyHasMore = replyHasMore,
@@ -406,6 +475,7 @@ object ReviewV1Parser {
         path: String,
         expectedCommentId: String,
         counter: IntArray,
+        capabilities: ReviewParserCapabilities,
     ): ParagraphReply {
         counter[0]++
         if (counter[0] > MAX_REPLY_NODES) protocol("单页回复节点超过上限")
@@ -418,6 +488,7 @@ object ReviewV1Parser {
             replyToCommentId = replyToCommentId,
             replyToReplyId = replyToReplyId,
             text = text ?: protocol("$path.text 缺失"),
+            images = parseImages(images, capabilities.requireImages, "$path.images"),
             userId = userId,
             userName = userName,
             userAvatar = userAvatar,
@@ -426,9 +497,30 @@ object ReviewV1Parser {
             diggCount = diggCount ?: protocol("$path.digg_count 缺失"),
             replyCount = replyCount ?: protocol("$path.reply_count 缺失"),
             children = children.orEmpty().mapIndexed { index, child ->
-                child.toDomain("$path.children[$index]", expectedCommentId, counter)
+                child.toDomain("$path.children[$index]", expectedCommentId, counter, capabilities)
             },
         )
+    }
+
+    /** 将已校验图片 wire 列表转换为非空、顺序稳定的领域列表。 */
+    private fun parseImages(
+        images: List<ParagraphCommentImageWire>?,
+        requireImages: Boolean,
+        fieldPath: String,
+    ): List<ParagraphCommentImage> {
+        if (images == null) {
+            if (requireImages) protocol("$fieldPath 缺失或类型错误")
+            return emptyList()
+        }
+        return images.mapIndexed { index, image ->
+            val path = "$fieldPath[$index]"
+            ParagraphCommentImage(
+                url = image.url ?: protocol("$path.url 缺失"),
+                width = image.width ?: protocol("$path.width 缺失"),
+                height = image.height ?: protocol("$path.height 缺失"),
+                format = image.format?.trim()?.takeIf(String::isNotEmpty),
+            )
+        }
     }
 
     /** 把 warning wire 数据映射为稳定领域枚举。 */

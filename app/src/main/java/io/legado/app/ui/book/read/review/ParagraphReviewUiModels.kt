@@ -2,6 +2,7 @@ package io.legado.app.ui.book.read.review
 
 import okhttp3.HttpUrl.Companion.toHttpUrlOrNull
 import io.legado.app.model.review.ParagraphComment
+import io.legado.app.model.review.ParagraphCommentImage
 import io.legado.app.model.review.ParagraphReply
 import java.time.Instant
 import java.time.ZoneId
@@ -39,7 +40,14 @@ internal data class ParagraphReviewCommentPresentation(
     val diggCount: Int,
     val replyCount: Int,
     val avatarUrl: String?,
+    val images: List<ParagraphReviewImagePresentation>,
     val canOpenReplies: Boolean,
+)
+
+/** 保存经过 UI 安全过滤的段评图片。 */
+internal data class ParagraphReviewImagePresentation(
+    val url: String,
+    val aspectRatio: Float,
 )
 
 /** 保存回复行的只读展示字段，回复目标仅来自显式服务端字段。 */
@@ -51,6 +59,7 @@ internal data class ParagraphReviewReplyPresentation(
     val diggCount: Int,
     val replyCount: Int,
     val avatarUrl: String?,
+    val images: List<ParagraphReviewImagePresentation>,
 )
 
 /** 描述当前选中主评及其回复分页状态。 */
@@ -96,6 +105,32 @@ fun safeParagraphReviewAvatar(url: String?): String? {
     return parsed.toString().takeIf { parsed.scheme == "https" }
 }
 
+/** 只允许 HTTPS 段评图片地址进入 Glide。 */
+internal fun safeParagraphReviewImageUrl(url: String?): String? {
+    val parsed = url?.toHttpUrlOrNull() ?: return null
+    return parsed.toString().takeIf { parsed.scheme == "https" }
+}
+
+/** 将图片尺寸映射为受限缩略图比例，零尺寸与异常值使用一比一。 */
+internal fun paragraphReviewImageAspectRatio(width: Long, height: Long): Float {
+    if (width <= 0L || height <= 0L) return DEFAULT_REVIEW_IMAGE_ASPECT_RATIO
+    val ratio = width.toDouble() / height.toDouble()
+    if (!ratio.isFinite()) return DEFAULT_REVIEW_IMAGE_ASPECT_RATIO
+    return ratio.toFloat().coerceIn(MIN_REVIEW_IMAGE_ASPECT_RATIO, MAX_REVIEW_IMAGE_ASPECT_RATIO)
+}
+
+/** 过滤不安全地址并保持服务端图片顺序。 */
+internal fun presentParagraphReviewImages(
+    images: List<ParagraphCommentImage>,
+): List<ParagraphReviewImagePresentation> = images.mapNotNull { image ->
+    safeParagraphReviewImageUrl(image.url)?.let { safeUrl ->
+        ParagraphReviewImagePresentation(
+            url = safeUrl,
+            aspectRatio = paragraphReviewImageAspectRatio(image.width, image.height),
+        )
+    }
+}
+
 /** 将主评投影为列表行与回复头部共用的安全只读字段。 */
 internal fun presentParagraphReviewComment(
     comment: ParagraphComment,
@@ -110,6 +145,7 @@ internal fun presentParagraphReviewComment(
     diggCount = comment.diggCount,
     replyCount = comment.replyCount,
     avatarUrl = safeParagraphReviewAvatar(comment.userAvatar),
+    images = presentParagraphReviewImages(comment.images),
     canOpenReplies = repliesClickable && comment.replyCount > 0,
 )
 
@@ -127,6 +163,7 @@ internal fun presentParagraphReviewReply(
     diggCount = reply.diggCount,
     replyCount = reply.replyCount,
     avatarUrl = safeParagraphReviewAvatar(reply.userAvatar),
+    images = presentParagraphReviewImages(reply.images),
 )
 
 /** 区分视图首次绑定与运行中的模式切换，避免首次绑定覆盖已保存滚动位置。 */
@@ -160,3 +197,6 @@ fun flattenParagraphReviewReplies(
 private val REVIEW_TIME_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")
 private const val REPLY_CONTEXT_VISUAL_DEPTH = 1
 private const val DEFAULT_MAX_REPLY_VISUAL_DEPTH = 3
+private const val DEFAULT_REVIEW_IMAGE_ASPECT_RATIO = 1f
+private const val MIN_REVIEW_IMAGE_ASPECT_RATIO = 0.5f
+private const val MAX_REVIEW_IMAGE_ASPECT_RATIO = 2f

@@ -63,6 +63,7 @@ data class ParagraphCommentPageWire(
 data class ParagraphCommentWire(
     @SerializedName("comment_id") val commentId: String? = null,
     val text: String? = null,
+    val images: List<ParagraphCommentImageWire>? = null,
     @SerializedName("user_id") val userId: String? = null,
     @SerializedName("user_name") val userName: String? = null,
     @SerializedName("user_avatar") val userAvatar: String? = null,
@@ -74,6 +75,14 @@ data class ParagraphCommentWire(
     @SerializedName("reply_total") val replyTotal: Int? = null,
     @SerializedName("reply_has_more") val replyHasMore: Boolean? = null,
     @SerializedName("reply_next_cursor") val replyNextCursor: String? = null,
+)
+
+/** 保存公共段评 API 返回的 nullable 图片字段。 */
+data class ParagraphCommentImageWire(
+    val url: String? = null,
+    val width: Long? = null,
+    val height: Long? = null,
+    val format: String? = null,
 )
 
 /** 保存回复分页的 nullable wire 数据。 */
@@ -94,6 +103,7 @@ data class ParagraphReplyWire(
     @SerializedName("reply_to_comment_id") val replyToCommentId: String? = null,
     @SerializedName("reply_to_reply_id") val replyToReplyId: String? = null,
     val text: String? = null,
+    val images: List<ParagraphCommentImageWire>? = null,
     @SerializedName("user_id") val userId: String? = null,
     @SerializedName("user_name") val userName: String? = null,
     @SerializedName("user_avatar") val userAvatar: String? = null,

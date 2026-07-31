@@ -25,6 +25,16 @@ class ReviewRuleEditorTest {
             "userIdRule" to "$.user_id",
             "quoteParentIdRule" to "$.reply_to_reply_id",
             "quoteChildrenRule" to "$.children",
+            "imageListRule" to "$.images",
+            "imageUrlRule" to "$.url",
+            "imageWidthRule" to "$.width",
+            "imageHeightRule" to "$.height",
+            "imageFormatRule" to "$.format",
+            "quoteImageListRule" to "$.images",
+            "quoteImageUrlRule" to "$.url",
+            "quoteImageWidthRule" to "$.width",
+            "quoteImageHeightRule" to "$.height",
+            "quoteImageFormatRule" to "$.format",
         )
 
         val rule = values.toReviewRuleOrNull()
@@ -34,6 +44,9 @@ class ReviewRuleEditorTest {
         assertEquals("$.user_id", rule?.userIdRule)
         assertEquals("$.reply_to_reply_id", rule?.quoteParentIdRule)
         assertEquals("$.children", rule?.quoteChildrenRule)
+        assertTrue(rule?.supportsParagraphCommentImagesV1() == true)
+        assertEquals("$.width", rule?.imageWidthRule)
+        assertEquals("$.format", rule?.quoteImageFormatRule)
     }
 
     /** 验证任一非空但不完整的编辑内容会构建为不支持规则供保存层拦截。 */
@@ -41,6 +54,15 @@ class ReviewRuleEditorTest {
     fun toReviewRuleOrNull_keepsIncompleteRuleForValidation() {
         val rule = mapOf("reviewUrl" to "/comments").toReviewRuleOrNull()
         assertFalse(rule?.supportsParagraphCommentsV1() == true)
+    }
+
+    /** 验证基础纯文本规则无需图片字段也能保存为受支持合同。 */
+    @Test
+    fun toReviewRuleOrNull_keepsTextOnlyCapabilityWithoutImageRules() {
+        val rule = requiredValues().toReviewRuleOrNull()
+
+        assertTrue(rule?.supportsParagraphCommentsV1() == true)
+        assertFalse(rule?.supportsParagraphCommentImagesV1() == true)
     }
 
     /** 验证编辑器保留未知可选声明但不会把它们误当成必填能力。 */

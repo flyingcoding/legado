@@ -1,6 +1,7 @@
 package io.legado.app.ui.book.read.review
 
 import io.legado.app.model.review.ParagraphComment
+import io.legado.app.model.review.ParagraphCommentImage
 import io.legado.app.model.review.ParagraphReply
 import io.legado.app.model.review.ParagraphReplyTreeBuilder
 import io.legado.app.ui.book.read.page.entities.column.formatParagraphReviewCount
@@ -33,6 +34,76 @@ class ParagraphReviewUiModelsTest {
         assertNull(safeParagraphReviewAvatar("http://example.invalid/avatar.png"))
         assertNull(safeParagraphReviewAvatar("/avatar.png"))
         assertNull(safeParagraphReviewAvatar("not a url"))
+    }
+
+    /** 验证图片投影只保留 HTTPS，并保持有效图片的服务端顺序。 */
+    @Test
+    fun imagePresenter_filtersUnsafeUrlsAndPreservesOrder() {
+        val images = listOf(
+            image("https://example.invalid/first.webp", 100, 200),
+            image("http://example.invalid/plain.jpg", 100, 100),
+            image("/relative.png", 100, 100),
+            image("data:image/png;base64,AA", 100, 100),
+            image("file:///tmp/image.png", 100, 100),
+            image("content://images/1", 100, 100),
+            image("https://example.invalid/second.webp", 200, 100),
+        )
+
+        val presentation = presentParagraphReviewImages(images)
+
+        assertEquals(
+            listOf(
+                "https://example.invalid/first.webp",
+                "https://example.invalid/second.webp",
+            ),
+            presentation.map(ParagraphReviewImagePresentation::url),
+        )
+        assertEquals(listOf(0.5f, 2f), presentation.map { it.aspectRatio })
+    }
+
+    /** 验证零尺寸回退一比一，极端尺寸被限制在安全比例内。 */
+    @Test
+    fun imageAspectRatio_usesDefaultAndSafeBounds() {
+        assertEquals(1f, paragraphReviewImageAspectRatio(0, 100), 0f)
+        assertEquals(1f, paragraphReviewImageAspectRatio(100, 0), 0f)
+        assertEquals(0.5f, paragraphReviewImageAspectRatio(1, Long.MAX_VALUE), 0f)
+        assertEquals(2f, paragraphReviewImageAspectRatio(Long.MAX_VALUE, 1), 0f)
+        assertEquals(1.5f, paragraphReviewImageAspectRatio(300, 200), 0f)
+    }
+
+    /** 验证纯图片主评保留空正文和安全图片列表。 */
+    @Test
+    fun commentPresenter_keepsImageOnlyContent() {
+        val presentation = presentParagraphReviewComment(
+            comment = comment(null, null, 0, 0, 0).copy(
+                text = "",
+                images = listOf(image("https://example.invalid/only.png", 0, 0)),
+            ),
+            anonymousUser = "匿名用户",
+            unknownTime = "未知时间",
+            repliesClickable = false,
+        )
+
+        assertEquals("", presentation.content)
+        assertEquals(1, presentation.images.size)
+        assertEquals(1f, presentation.images.single().aspectRatio, 0f)
+    }
+
+    /** 验证纯图片回复同样保留空正文和安全图片列表。 */
+    @Test
+    fun replyPresenter_keepsImageOnlyContent() {
+        val presentation = presentParagraphReviewReply(
+            reply = reply("image-only").copy(
+                text = "",
+                images = listOf(image("https://example.invalid/reply.png", 200, 100)),
+            ),
+            anonymousUser = "匿名用户",
+            unknownTime = "未知时间",
+        )
+
+        assertEquals("", presentation.content)
+        assertEquals("https://example.invalid/reply.png", presentation.images.single().url)
+        assertEquals(2f, presentation.images.single().aspectRatio, 0f)
     }
 
     /** 验证无父关系的根节点都作为所选主评的一级直接回复。 */
@@ -170,6 +241,7 @@ class ParagraphReviewUiModelsTest {
         replyToCommentId = "comment",
         replyToReplyId = null,
         text = id,
+        images = emptyList(),
         userId = null,
         userName = null,
         userAvatar = null,
@@ -190,6 +262,7 @@ class ParagraphReviewUiModelsTest {
     ) = ParagraphComment(
         commentId = "comment",
         text = "主评正文",
+        images = emptyList(),
         userId = null,
         userName = userName,
         userAvatar = userAvatar,
@@ -201,5 +274,13 @@ class ParagraphReviewUiModelsTest {
         replyTotal = null,
         replyHasMore = null,
         replyNextCursor = null,
+    )
+
+    /** 创建合成段评图片领域对象。 */
+    private fun image(url: String, width: Long, height: Long) = ParagraphCommentImage(
+        url = url,
+        width = width,
+        height = height,
+        format = null,
     )
 }

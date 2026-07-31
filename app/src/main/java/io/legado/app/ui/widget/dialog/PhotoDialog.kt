@@ -57,7 +57,7 @@ class PhotoDialog() : BaseDialogFragment(R.layout.dialog_photo_view) {
                 .diskCacheStrategy(DiskCacheStrategy.NONE)
                 .into(binding.photoView)
         } else {
-            ImageLoader.load(requireContext(), src).apply {
+            ImageLoader.loadRedactedRemote(requireContext(), src).apply {
                 arguments.getString("sourceOrigin")?.let { sourceOrigin ->
                     apply(RequestOptions().set(OkHttpModelLoader.sourceOriginOption, sourceOrigin))
                 }

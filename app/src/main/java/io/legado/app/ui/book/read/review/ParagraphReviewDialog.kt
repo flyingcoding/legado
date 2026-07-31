@@ -15,8 +15,10 @@ import io.legado.app.databinding.ViewLoadMoreBinding
 import io.legado.app.lib.theme.accentColor
 import io.legado.app.ui.widget.recycler.LoadMoreView
 import io.legado.app.ui.widget.recycler.VerticalDivider
+import io.legado.app.ui.widget.dialog.PhotoDialog
 import io.legado.app.utils.gone
 import io.legado.app.utils.setLayout
+import io.legado.app.utils.showDialogFragment
 import io.legado.app.utils.viewbindingdelegate.viewBinding
 import io.legado.app.utils.visible
 import kotlinx.coroutines.flow.combine
@@ -29,17 +31,21 @@ class ParagraphReviewDialog : BaseDialogFragment(R.layout.dialog_paragraph_revie
     private val viewModel by viewModels<ParagraphReviewViewModel>()
     private val commentLoadMoreView by lazy { LoadMoreView(requireContext()) }
     private val replyLoadMoreView by lazy { LoadMoreView(requireContext()) }
+    private val sourceUrl: String
+        get() = arguments?.getString(ParagraphReviewViewModel.ARG_SOURCE_URL).orEmpty()
     private val commentAdapter by lazy {
         ParagraphReviewCommentAdapter(
             context = requireContext(),
-            sourceUrl = arguments?.getString(ParagraphReviewViewModel.ARG_SOURCE_URL).orEmpty(),
+            sourceUrl = sourceUrl,
             onRepliesClick = viewModel::openReplies,
+            onImageClick = ::openImage,
         )
     }
     private val replyAdapter by lazy {
         ParagraphReviewReplyAdapter(
             context = requireContext(),
-            sourceUrl = arguments?.getString(ParagraphReviewViewModel.ARG_SOURCE_URL).orEmpty(),
+            sourceUrl = sourceUrl,
+            onImageClick = ::openImage,
         )
     }
     private var showingReplies: Boolean? = null
@@ -250,6 +256,11 @@ class ParagraphReviewDialog : BaseDialogFragment(R.layout.dialog_paragraph_revie
     private fun isGenerationCurrent(): Boolean {
         val generation = arguments?.getLong(ParagraphReviewViewModel.ARG_GENERATION, -1L) ?: -1L
         return (activity as? GenerationOwner)?.isParagraphReviewGenerationCurrent(generation) == true
+    }
+
+    /** 使用书源 origin 打开现有原图预览对话框。 */
+    private fun openImage(url: String) {
+        showDialogFragment(PhotoDialog(url, sourceUrl))
     }
 
     /** 由阅读 Activity 提供当前 generation 校验。 */

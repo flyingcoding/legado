@@ -39,6 +39,12 @@ object ImageLoader {
         }
     }
 
+    /** 使用日志脱敏模型加载远程图片，非 HTTP(S) 地址保持现有加载行为。 */
+    fun loadRedactedRemote(context: Context, path: String?): RequestBuilder<Drawable> {
+        val model = RedactedGlideUrl.fromOrNull(path) ?: return load(context, path)
+        return Glide.with(context).load(model)
+    }
+
     fun load(fragment: Fragment, lifecycle: Lifecycle, path: String?): RequestBuilder<Drawable> {
         val requestManager = Glide.with(fragment).lifecycle(lifecycle)
         return when {

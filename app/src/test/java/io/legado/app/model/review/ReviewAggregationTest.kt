@@ -46,6 +46,34 @@ class ReviewAggregationTest {
         assertEquals("", snapshot.nextCursor)
     }
 
+    /** 验证重复主评刷新图片元数据时保持首次出现顺序。 */
+    @Test
+    fun accumulator_replacesDuplicateImagesWithoutReordering() {
+        val accumulator = CursorPageAccumulator<ParagraphComment>(ParagraphComment::commentId)
+        accumulator.append(
+            null,
+            listOf(
+                comment("1", "old", listOf(image("old.png", 10, 20))),
+                comment("2", "second", listOf(image("second.png", 20, 20))),
+            ),
+            2,
+            true,
+            "next",
+        )
+        accumulator.append(
+            "next",
+            listOf(comment("1", "new", listOf(image("new.png", 30, 40)))),
+            2,
+            false,
+            "",
+        )
+
+        val snapshot = accumulator.snapshot()
+        assertEquals(listOf("1", "2"), snapshot.items.map(ParagraphComment::commentId))
+        assertEquals("new.png", snapshot.items.first().images.single().url)
+        assertEquals(30L, snapshot.items.first().images.single().width)
+    }
+
     /** 验证空 cursor、重复 cursor 和跳过串行 cursor 都成为协议错误。 */
     @Test
     fun accumulator_rejectsInvalidCursorChains() {
@@ -109,10 +137,31 @@ class ReviewAggregationTest {
         assertEquals("new", tree.first().text)
     }
 
+    /** 验证回复树通过 copy 挂接 children 后保留根节点和子节点图片。 */
+    @Test
+    fun replyTree_preservesImagesWhileAttachingChildren() {
+        val child = reply(
+            "child",
+            parentId = "parent",
+            images = listOf(image("child.png", 10, 10)),
+        )
+        val parent = reply("parent", images = listOf(image("parent.png", 20, 10)))
+
+        val tree = ParagraphReplyTreeBuilder.build(listOf(child, parent))
+
+        assertEquals("parent.png", tree.single().images.single().url)
+        assertEquals("child.png", tree.single().children.single().images.single().url)
+    }
+
     /** 创建最小主评领域对象。 */
-    private fun comment(id: String, text: String): ParagraphComment = ParagraphComment(
+    private fun comment(
+        id: String,
+        text: String,
+        images: List<ParagraphCommentImage> = emptyList(),
+    ): ParagraphComment = ParagraphComment(
         commentId = id,
         text = text,
+        images = images,
         userId = null,
         userName = null,
         userAvatar = null,
@@ -131,12 +180,14 @@ class ReviewAggregationTest {
         id: String,
         parentId: String? = null,
         text: String = id,
+        images: List<ParagraphCommentImage> = emptyList(),
     ): ParagraphReply = ParagraphReply(
         replyId = id,
         parentReplyId = null,
         replyToCommentId = "3003",
         replyToReplyId = parentId,
         text = text,
+        images = images,
         userId = null,
         userName = null,
         userAvatar = null,
@@ -145,5 +196,13 @@ class ReviewAggregationTest {
         diggCount = 0,
         replyCount = 0,
         children = emptyList(),
+    )
+
+    /** 创建合成图片元数据。 */
+    private fun image(url: String, width: Long, height: Long) = ParagraphCommentImage(
+        url = url,
+        width = width,
+        height = height,
+        format = null,
     )
 }

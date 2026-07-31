@@ -810,6 +810,7 @@
     <string name="review_replies_title" tools:ignore="MissingTranslation">Replies</string>
     <string name="review_reply_to_user" tools:ignore="MissingTranslation">Replying to %1$s</string>
     <string name="review_reply_empty" tools:ignore="MissingTranslation">No replies</string>
+    <string name="review_image" tools:ignore="MissingTranslation">Comment image</string>
     <!-- 段评规则只维护默认和简体中文资源，其余 locale 回退到默认文案。 -->
     <string name="rule_review_contract" tools:ignore="MissingTranslation">Comment contract (contractVersion)</string>
     <string name="rule_review_transport_policy" tools:ignore="MissingTranslation">Comment transport policy (transportPolicy)</string>
@@ -826,6 +827,11 @@
     <string name="rule_comment_user_name" tools:ignore="MissingTranslation">Comment user name rule, optional (userNameRule)</string>
     <string name="rule_comment_avatar" tools:ignore="MissingTranslation">Comment avatar rule, optional (avatarRule)</string>
     <string name="rule_comment_content" tools:ignore="MissingTranslation">Comment content rule (contentRule)</string>
+    <string name="rule_comment_image_list" tools:ignore="MissingTranslation">Comment image list rule (imageListRule)</string>
+    <string name="rule_comment_image_url" tools:ignore="MissingTranslation">Comment image URL rule (imageUrlRule)</string>
+    <string name="rule_comment_image_width" tools:ignore="MissingTranslation">Comment image width rule (imageWidthRule)</string>
+    <string name="rule_comment_image_height" tools:ignore="MissingTranslation">Comment image height rule (imageHeightRule)</string>
+    <string name="rule_comment_image_format" tools:ignore="MissingTranslation">Comment image format rule (imageFormatRule)</string>
     <string name="rule_comment_post_time" tools:ignore="MissingTranslation">Comment post time rule (postTimeRule)</string>
     <string name="rule_comment_vote_up_count" tools:ignore="MissingTranslation">Comment like count rule (voteUpCountRule)</string>
     <string name="rule_comment_quote_count" tools:ignore="MissingTranslation">Comment reply count rule (quoteCountRule)</string>
@@ -838,6 +844,11 @@
     <string name="rule_quote_user_name" tools:ignore="MissingTranslation">Reply user name rule, optional (quoteUserNameRule)</string>
     <string name="rule_quote_avatar" tools:ignore="MissingTranslation">Reply avatar rule, optional (quoteAvatarRule)</string>
     <string name="rule_quote_content" tools:ignore="MissingTranslation">Reply content rule (quoteContentRule)</string>
+    <string name="rule_quote_image_list" tools:ignore="MissingTranslation">Reply image list rule (quoteImageListRule)</string>
+    <string name="rule_quote_image_url" tools:ignore="MissingTranslation">Reply image URL rule (quoteImageUrlRule)</string>
+    <string name="rule_quote_image_width" tools:ignore="MissingTranslation">Reply image width rule (quoteImageWidthRule)</string>
+    <string name="rule_quote_image_height" tools:ignore="MissingTranslation">Reply image height rule (quoteImageHeightRule)</string>
+    <string name="rule_quote_image_format" tools:ignore="MissingTranslation">Reply image format rule (quoteImageFormatRule)</string>
     <string name="rule_quote_post_time" tools:ignore="MissingTranslation">Reply post time rule (quotePostTimeRule)</string>
     <string name="rule_quote_vote_up_count" tools:ignore="MissingTranslation">Reply like count rule (quoteVoteUpCountRule)</string>
     <string name="rule_quote_children" tools:ignore="MissingTranslation">Nested replies rule, optional (quoteChildrenRule)</string>

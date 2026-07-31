@@ -43,6 +43,23 @@ class ReviewMemoryCacheTest {
         assertSame(secondIndex, cache.getOrLoad(indexKey) { secondIndex })
     }
 
+    /** 验证缓存命中原样保留主评图片元数据。 */
+    @Test
+    fun cache_hitPreservesCommentImages() = withCacheScope { scope ->
+        val cache = ReviewMemoryCache(scope)
+        val key = ReviewCacheKey.Comments("source", "book", "item", "0", 12, "")
+        val expected = commentPage("0").copy(
+            comments = listOf(commentWithImage()),
+            total = 1,
+        )
+
+        cache.getOrLoad(key) { expected }
+        val cached = cache.getOrLoad(key) { commentPage("unexpected") }
+
+        assertSame(expected, cached)
+        assertEquals("https://example.invalid/cached.png", cached.comments.single().images.single().url)
+    }
+
     /** 验证同 key 并发只执行一次 loader 并共享同一结果。 */
     @Test
     fun cache_singleFlightSharesConcurrentLoad() = withCacheScope { scope ->
@@ -297,5 +314,25 @@ class ReviewMemoryCacheTest {
         total = 0,
         hasMore = false,
         nextCursor = "",
+    )
+
+    /** 创建带图片的最小主评缓存值。 */
+    private fun commentWithImage(): ParagraphComment = ParagraphComment(
+        commentId = "comment",
+        text = "",
+        images = listOf(
+            ParagraphCommentImage("https://example.invalid/cached.png", 100, 200, "png")
+        ),
+        userId = null,
+        userName = null,
+        userAvatar = null,
+        createTimestamp = 0,
+        diggCount = 0,
+        replyCount = 0,
+        repliesLoaded = false,
+        replies = emptyList(),
+        replyTotal = null,
+        replyHasMore = null,
+        replyNextCursor = null,
     )
 }

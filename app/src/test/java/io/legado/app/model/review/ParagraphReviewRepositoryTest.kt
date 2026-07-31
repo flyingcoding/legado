@@ -236,6 +236,48 @@ class ParagraphReviewRepositoryTest {
         assertEquals(cursor, requestedUrl.toHttpUrl().queryParameter("cursor"))
     }
 
+    /** 验证三个 repository 入口都把书源图片能力传入 parser。 */
+    @Test
+    fun allEndpoints_enforceImageCapabilityFromRule() {
+        val repository = DefaultParagraphReviewRepository(
+            httpExecutor = ReviewHttpExecutor { url, _, _ ->
+                val body = when (url.toHttpUrl().encodedPath) {
+                    "/api/book/paragraph_comments" -> indexWithCommentWithoutImagesJson()
+                    "/api/book/paragraph_comment_page" -> commentPageWithoutImagesJson()
+                    "/api/book/paragraph_comment_replies" -> replyPageWithoutImagesJson()
+                    else -> error("未预期的段评端点")
+                }
+                response(200, body, url)
+            }
+        )
+        val imageSource = source().copy(ruleReview = completeRule().withImageRules())
+
+        assertThrows(ReviewException.Protocol::class.java) {
+            runBlocking {
+                repository.loadIndex(
+                    imageSource,
+                    ReviewIndexRequest("1001", "2002"),
+                )
+            }
+        }
+        assertThrows(ReviewException.Protocol::class.java) {
+            runBlocking {
+                repository.loadCommentPage(
+                    imageSource,
+                    ParagraphCommentPageRequest("1001", "2002", 12),
+                )
+            }
+        }
+        assertThrows(ReviewException.Protocol::class.java) {
+            runBlocking {
+                repository.loadReplyPage(
+                    imageSource,
+                    ParagraphReplyPageRequest("1001", "2002", "3003"),
+                )
+            }
+        }
+    }
+
     /** 验证 Retry-After 支持非负秒数和 RFC 1123 日期。 */
     @Test
     fun parseRetryAfter_supportsSecondsAndHttpDate() {
@@ -285,6 +327,20 @@ class ParagraphReviewRepositoryTest {
         quoteVoteUpCountRule = "$.digg_count",
     )
 
+    /** 补齐图片选择器以启用严格图片解析能力。 */
+    private fun ReviewRule.withImageRules(): ReviewRule = copy(
+        imageListRule = "$.images",
+        imageUrlRule = "$.url",
+        imageWidthRule = "$.width",
+        imageHeightRule = "$.height",
+        imageFormatRule = "$.format",
+        quoteImageListRule = "$.images",
+        quoteImageUrlRule = "$.url",
+        quoteImageWidthRule = "$.width",
+        quoteImageHeightRule = "$.height",
+        quoteImageFormatRule = "$.format",
+    )
+
     /** 创建合成 StrResponse 并可指定最终 URL 与响应头。 */
     private fun response(
         status: Int,
@@ -308,6 +364,48 @@ class ParagraphReviewRepositoryTest {
       "data":{
         "item_id":"2002","book_id":"1001","item_version":"0",
         "paragraphs":[],"partial":false,"warnings":[]
+      }
+    }""".trimIndent()
+
+    /** 创建索引内含缺少图片字段的 eager 主评响应。 */
+    private fun indexWithCommentWithoutImagesJson(): String = """{
+      "contract":"fanqie.paragraph-comments.v1","code":0,"message":"SUCCESS",
+      "data":{
+        "item_id":"2002","book_id":"1001","item_version":"0",
+        "paragraphs":[{
+          "para_id":12,"count":1,"hot":"1","user_count":1,"detail_loaded":true,
+          "comments":[{
+            "comment_id":"3003","text":"合成主评","create_timestamp":1700000000,
+            "digg_count":0,"reply_count":0,"replies_loaded":false
+          }]
+        }],
+        "partial":false,"warnings":[]
+      }
+    }""".trimIndent()
+
+    /** 创建缺少图片字段的主评分页响应。 */
+    private fun commentPageWithoutImagesJson(): String = """{
+      "contract":"fanqie.paragraph-comments.v1","code":0,"message":"SUCCESS",
+      "data":{
+        "item_id":"2002","book_id":"1001","item_version":"0","para_id":12,
+        "comments":[{
+          "comment_id":"3003","text":"合成主评","create_timestamp":1700000000,
+          "digg_count":0,"reply_count":0,"replies_loaded":false
+        }],
+        "total":1,"has_more":false,"next_cursor":""
+      }
+    }""".trimIndent()
+
+    /** 创建缺少图片字段的回复分页响应。 */
+    private fun replyPageWithoutImagesJson(): String = """{
+      "contract":"fanqie.paragraph-comments.v1","code":0,"message":"SUCCESS",
+      "data":{
+        "item_id":"2002","book_id":"1001","comment_id":"3003",
+        "replies":[{
+          "reply_id":"5005","reply_to_comment_id":"3003","text":"合成回复",
+          "create_timestamp":1700000001,"digg_count":0,"reply_count":0
+        }],
+        "total":1,"has_more":false,"next_cursor":""
       }
     }""".trimIndent()
 }
