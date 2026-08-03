@@ -102,18 +102,24 @@ class ReviewTemplateExpanderTest {
     /** 验证本机调试 HTTP 可用但响应重定向仍必须同源。 */
     @Test
     fun origin_allowsLocalHttpAndRejectsCrossOriginResponse() {
+        val debugPolicy = ReviewTransportPolicy(
+            isDebugBuild = true,
+            declaredPolicy = null,
+        )
         val url = ReviewTemplateExpander.expand(
             "http://127.0.0.1:8080",
             ReviewEndpoint.INDEX,
             "/api/book/paragraph_comments" +
                 "?book_id={{bookId}}&item_id={{itemId}}&detail_limit=0",
             ReviewTemplateValues(bookId = "1", itemId = "2"),
+            debugPolicy,
         )
         assertEquals("127.0.0.1", url.host)
         assertThrows(ReviewException.Protocol::class.java) {
             ReviewTemplateExpander.requireSameOrigin(
                 "https://fanqie.example.invalid",
                 "https://other.example.invalid/api/book/paragraph_comments",
+                debugPolicy,
             )
         }
     }

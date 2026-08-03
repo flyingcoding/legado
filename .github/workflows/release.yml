@@ -75,6 +75,11 @@ jobs:
           chmod +x gradlew
           ./gradlew assemble${{ env.product }}release --build-cache --parallel --daemon --warning-mode all
 
+      - name: Verify Paragraph Review R8 Shrink Output
+        run: |
+          mapping_path="$GITHUB_WORKSPACE/app/build/outputs/mapping/${{ env.product }}Release/mapping.txt"
+          python3 "$GITHUB_WORKSPACE/scripts/verify_paragraph_review_r8.py" "$mapping_path"
+
       - name: Organize the Files
         run: |
           mkdir -p ${{ github.workspace }}/apk/

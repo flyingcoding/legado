@@ -78,6 +78,12 @@ cn.hutool.core.util.**{*;}
 # StrResponse
 -keep class **.help.http.StrResponse{*;}
 
+# 保留段评 Gson 反射 wire DTO 的字段与无参构造，其他段评类型仍可正常优化混淆。
+-keep,allowoptimization class io.legado.app.model.review.wire.**Wire {
+    <fields>;
+    <init>();
+}
+
 # markwon
 -dontwarn org.commonmark.ext.gfm.**
 

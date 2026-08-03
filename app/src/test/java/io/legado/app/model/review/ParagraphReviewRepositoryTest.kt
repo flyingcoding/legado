@@ -86,7 +86,13 @@ class ParagraphReviewRepositoryTest {
             httpExecutor = ReviewHttpExecutor { url, _, _ ->
                 calls.incrementAndGet()
                 response(200, indexJson(), url)
-            }
+            },
+            transportPolicyFactory = { rule ->
+                ReviewTransportPolicy(
+                    isDebugBuild = true,
+                    declaredPolicy = rule.transportPolicy,
+                )
+            },
         )
         val remoteHttpSource = source().copy(
             bookSourceUrl = "http://remote.example.invalid",

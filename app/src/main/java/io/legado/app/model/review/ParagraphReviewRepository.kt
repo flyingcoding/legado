@@ -50,6 +50,9 @@ fun interface ReviewHttpExecutor {
 class DefaultParagraphReviewRepository(
     private val httpExecutor: ReviewHttpExecutor = AnalyzeUrlReviewHttpExecutor,
     private val nowEpochMillis: () -> Long = System::currentTimeMillis,
+    private val transportPolicyFactory: (ReviewRule) -> ReviewTransportPolicy = { rule ->
+        ReviewTransportPolicy.fromRule(rule)
+    },
 ) : ParagraphReviewRepository {
 
     /** 校验能力后获取章节段评索引。 */
@@ -136,7 +139,7 @@ class DefaultParagraphReviewRepository(
     ): T {
         val context = currentCoroutineContext()
         context.ensureActive()
-        val transportPolicy = ReviewTransportPolicy.fromRule(rule)
+        val transportPolicy = transportPolicyFactory(rule)
         val safeUrl = ReviewTemplateExpander.expand(
             sourceUrl = source.bookSourceUrl,
             endpoint = endpoint,

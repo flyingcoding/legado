@@ -188,7 +188,15 @@ fun isParagraphReviewEffective(
 
 /** 定义不携带 URL、身份或响应内容的阅读页段评诊断分类。 */
 enum class ParagraphReviewDiagnostic(val code: String) {
-    TRANSPORT_REJECTED("transport_rejected"),
+    UNSUPPORTED_SOURCE("unsupported_source"),
+    INVALID_TEMPLATE("invalid_template"),
+    INVALID_ARGUMENT("invalid_argument"),
+    AUTHENTICATION_ERROR("authentication_error"),
+    NETWORK_ERROR("network_error"),
+    HTTP_ERROR("http_error"),
+    API_ERROR("api_error"),
+    PROTOCOL_ERROR("protocol_error"),
+    UNKNOWN_ERROR("unknown_error"),
     MAPPING_UNAVAILABLE("mapping_unavailable"),
     MAPPING_INVALID("mapping_invalid"),
 }
@@ -204,10 +212,26 @@ fun paragraphReviewDiagnosticFor(
     is ParagraphReviewMappingResult.Verified -> null
 }
 
-/** 仅把请求前的安全拒绝归约为稳定传输诊断，不记录异常消息。 */
+/** 将全部段评异常穷尽归约为稳定诊断，新增异常子类时强制同步分类。 */
+private fun ReviewException.toParagraphReviewDiagnostic(): ParagraphReviewDiagnostic =
+    when (this) {
+        is ReviewException.UnsupportedSource -> ParagraphReviewDiagnostic.UNSUPPORTED_SOURCE
+        is ReviewException.InvalidTemplate -> ParagraphReviewDiagnostic.INVALID_TEMPLATE
+        is ReviewException.InvalidArgument -> ParagraphReviewDiagnostic.INVALID_ARGUMENT
+        is ReviewException.Authentication -> ParagraphReviewDiagnostic.AUTHENTICATION_ERROR
+        is ReviewException.Network -> ParagraphReviewDiagnostic.NETWORK_ERROR
+        is ReviewException.Http -> ParagraphReviewDiagnostic.HTTP_ERROR
+        is ReviewException.Api -> ParagraphReviewDiagnostic.API_ERROR
+        is ReviewException.Protocol -> ParagraphReviewDiagnostic.PROTOCOL_ERROR
+    }
+
+/** 将失败归约为稳定脱敏诊断，取消不记录，未知异常使用固定分类。 */
 fun paragraphReviewDiagnosticFor(error: Throwable): ParagraphReviewDiagnostic? =
-    ParagraphReviewDiagnostic.TRANSPORT_REJECTED
-        .takeIf { error is ReviewException.InvalidTemplate }
+    when (error) {
+        is CancellationException -> null
+        is ReviewException -> error.toParagraphReviewDiagnostic()
+        else -> ParagraphReviewDiagnostic.UNKNOWN_ERROR
+    }
 
 /** 记录不包含动态请求数据的段评诊断代码。 */
 private fun reportParagraphReviewDiagnostic(diagnostic: ParagraphReviewDiagnostic) {

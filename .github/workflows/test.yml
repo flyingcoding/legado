@@ -106,11 +106,18 @@ jobs:
           for file in `ls ${{ github.workspace }}/app/build/outputs/apk/*/*/*.apk`; do
             mv "$file" ${{ github.workspace }}/apk/legado_${{ env.product }}_${{ env.VERSIONL }}_$typeName.apk
           done
-          echo "移动mapping文件"
+          echo "移动mapping和seeds文件"
           mkdir -p ${{ github.workspace }}/mapping/
           for file in `ls ${{ github.workspace }}/app/build/outputs/mapping/*/mapping.txt`; do
+            mapping_dir="${file%/mapping.txt}"
             mv "$file" ${{ github.workspace }}/mapping/mapping.txt
+            mv "$mapping_dir/seeds.txt" ${{ github.workspace }}/mapping/seeds.txt
           done
+
+      - name: Verify Paragraph Review R8 Shrink Output
+        run: |
+          python3 "$GITHUB_WORKSPACE/scripts/verify_paragraph_review_r8.py" \
+            "$GITHUB_WORKSPACE/mapping/mapping.txt"
 
       - name: Move Missing Rules Files
         run: |
