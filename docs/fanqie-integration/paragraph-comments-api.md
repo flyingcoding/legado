@@ -6,6 +6,8 @@
 fanqie.paragraph-comments.v1
 ```
 
+> 图片增量（2026-07-31）：当前 proxy 在同一 v1 合同下为主评和回复增加 `images` 数组；无图片返回 `[]`。Legado 的字段、解析、缓存、UI 和测试待修改项见 [Legado 段评图片适配待修改清单](./paragraph-comment-images-code-todo.md)。本文后续章节保留基础文字段评合同，实施图片能力时以该增量清单为补充约束。
+
 本文是接口合同，不是生产切换证明。只有 Java/Go 新版本成对部署、健康门禁和真实 smoke 均通过后，才能声明生产环境已经提供该能力。
 
 ## 1. 范围与调用链

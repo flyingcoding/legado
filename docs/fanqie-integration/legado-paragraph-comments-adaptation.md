@@ -1,5 +1,7 @@
 # Legado 段落评论适配指南
 
+> 当前状态（2026-07-31）：本文记录的是 `master@5f5d3140` 时的历史基础能力审计。当前 `master@adce026d6` 已实现段评索引、主评/回复分页、回复树、缓存和只读 UI，不应再把下文的“未完成骨架”当作当前缺口。段评正文图片的增量代码清单见 [Legado 段评图片适配待修改清单](./paragraph-comment-images-code-todo.md)。
+
 本文指导后续在 Legado Android 源码中接入 `fanqie.paragraph-comments.v1`。本任务不修改 Legado 仓库，以下内容是基于只读代码审计得到的实施方案。
 
 ## 1. 参考基线与兼容结论
