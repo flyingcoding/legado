@@ -77,6 +77,6 @@ internal class ParagraphReviewImageAdapter(
     }
 
     private companion object {
-        const val THUMBNAIL_HEIGHT_DP = 104
+        const val THUMBNAIL_HEIGHT_DP = 92
     }
 }

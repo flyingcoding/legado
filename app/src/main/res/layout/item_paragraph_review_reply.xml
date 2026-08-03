@@ -4,8 +4,11 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:minHeight="104dp"
-    android:padding="16dp">
+    android:minHeight="96dp"
+    android:paddingStart="16dp"
+    android:paddingTop="12dp"
+    android:paddingEnd="16dp"
+    android:paddingBottom="8dp">
 
     <androidx.appcompat.widget.AppCompatImageView
         android:id="@+id/iv_avatar"
@@ -24,37 +27,22 @@
         android:layout_marginStart="12dp"
         android:ellipsize="end"
         android:maxLines="1"
-        android:textColor="@color/primaryText"
-        android:textStyle="bold"
+        android:textSize="13sp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toEndOf="@id/iv_avatar"
         app:layout_constraintTop_toTopOf="@id/iv_avatar"
         tools:text="用户名" />
 
     <TextView
-        android:id="@+id/tv_time"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="12dp"
-        android:layout_marginTop="4dp"
-        android:textColor="@color/tv_text_summary"
-        android:textSize="12sp"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toEndOf="@id/iv_avatar"
-        app:layout_constraintTop_toBottomOf="@id/tv_user"
-        tools:text="2026-07-30 12:30" />
-
-    <TextView
         android:id="@+id/tv_reply_to"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_marginTop="10dp"
-        android:textColor="@color/tv_text_summary"
+        android:layout_marginTop="2dp"
         android:textSize="13sp"
         android:visibility="gone"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="@id/tv_user"
-        app:layout_constraintTop_toBottomOf="@id/iv_avatar"
+        app:layout_constraintTop_toBottomOf="@id/tv_user"
         tools:text="回复 某用户"
         tools:visibility="visible" />
 
@@ -63,22 +51,34 @@
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginTop="4dp"
-        android:textColor="@color/primaryText"
+        android:lineSpacingExtra="2dp"
         android:textIsSelectable="true"
+        android:textSize="14sp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="@id/tv_user"
         app:layout_constraintTop_toBottomOf="@id/tv_reply_to"
         tools:text="回复纯文本内容" />
 
     <TextView
+        android:id="@+id/tv_time"
+        android:layout_width="0dp"
+        android:layout_height="36dp"
+        android:gravity="center_vertical"
+        android:textSize="12sp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toStartOf="@id/tv_likes"
+        app:layout_constraintStart_toStartOf="@id/tv_user"
+        app:layout_constraintTop_toBottomOf="@id/rv_images"
+        tools:text="2026-07-30 12:30" />
+
+    <TextView
         android:id="@+id/tv_likes"
         android:layout_width="wrap_content"
         android:layout_height="36dp"
         android:gravity="center_vertical"
-        android:textColor="@color/tv_text_summary"
         android:textSize="12sp"
         app:layout_constraintEnd_toStartOf="@id/tv_replies"
-        app:layout_constraintTop_toBottomOf="@id/rv_images"
+        app:layout_constraintTop_toTopOf="@id/tv_time"
         tools:text="赞 12" />
 
     <TextView
@@ -86,10 +86,9 @@
         android:layout_width="wrap_content"
         android:layout_height="36dp"
         android:gravity="center_vertical"
-        android:textColor="@color/tv_text_summary"
         android:textSize="12sp"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/rv_images"
+        app:layout_constraintTop_toTopOf="@id/tv_time"
         tools:text="回复 3" />
 
     <androidx.recyclerview.widget.RecyclerView

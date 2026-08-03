@@ -6,6 +6,7 @@ import android.graphics.Path
 import android.content.Context
 import androidx.annotation.Keep
 import io.legado.app.R
+import io.legado.app.help.config.ReadBookConfig
 import io.legado.app.ui.book.read.page.ContentTextView
 import io.legado.app.ui.book.read.page.entities.TextLine
 import io.legado.app.ui.book.read.page.entities.TextLine.Companion.emptyTextLine
@@ -49,23 +50,37 @@ data class ReviewColumn(
 
     fun drawToCanvas(canvas: Canvas, baseLine: Float, height: Float) {
         if (count == 0) return
+        val bodyLeft = start + height / 6
+        val bodyRight = end - 1
+        val bodyTop = baseLine - height * 0.8f
+        val bodyBottom = baseLine
         path.reset()
         path.moveTo(start + 1, baseLine - height * 2 / 5)
-        path.lineTo(start + height / 6, baseLine - height * 0.55f)
-        path.lineTo(start + height / 6, baseLine - height * 0.8f)
-        path.lineTo(end - 1, baseLine - height * 0.8f)
-        path.lineTo(end - 1, baseLine)
-        path.lineTo(start + height / 6, baseLine)
-        path.lineTo(start + height / 6, baseLine - height / 4)
+        path.lineTo(bodyLeft, baseLine - height * 0.55f)
+        path.lineTo(bodyLeft, bodyTop)
+        path.lineTo(bodyRight, bodyTop)
+        path.lineTo(bodyRight, bodyBottom)
+        path.lineTo(bodyLeft, bodyBottom)
+        path.lineTo(bodyLeft, baseLine - height / 4)
         path.close()
         val reviewPaint = ChapterProvider.reviewPaint
+        reviewPaint.color = ReadBookConfig.textColor
+        reviewPaint.textSize = reviewColumnTextSize(height, countText.length)
+        val maxTextWidth = (bodyRight - bodyLeft).coerceAtLeast(0f) * 0.88f
+        val measuredTextWidth = reviewPaint.measureText(countText)
+        if (maxTextWidth > 0f && measuredTextWidth > maxTextWidth) {
+            reviewPaint.textSize *= maxTextWidth / measuredTextWidth
+        }
         reviewPaint.style = Paint.Style.STROKE
         canvas.drawPath(path, reviewPaint)
         reviewPaint.style = Paint.Style.FILL
+        val textCenterY = (bodyTop + bodyBottom) / 2
+        val textBaseline = textCenterY -
+                (reviewPaint.fontMetrics.ascent + reviewPaint.fontMetrics.descent) / 2
         canvas.drawText(
             countText,
-            (start + height / 9 + end) / 2,
-            baseLine - height * 0.23f,
+            (bodyLeft + bodyRight) / 2,
+            textBaseline,
             reviewPaint
         )
     }
@@ -80,3 +95,10 @@ fun formatParagraphReviewCount(count: Int): String =
 /** 把整页绝对基线转换成 TextLine 离屏画布使用的行内基线。 */
 fun reviewColumnLocalBaseline(lineBase: Float, lineTop: Float): Float =
     lineBase - lineTop
+
+/** 根据正文高度和计数字符数返回角标字号，保证长计数不贴边。 */
+fun reviewColumnTextSize(height: Float, textLength: Int): Float = height * when {
+    textLength <= 1 -> 0.52f
+    textLength <= 3 -> 0.40f
+    else -> 0.32f
+}

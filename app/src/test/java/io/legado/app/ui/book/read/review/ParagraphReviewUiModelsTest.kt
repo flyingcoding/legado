@@ -6,6 +6,7 @@ import io.legado.app.model.review.ParagraphReply
 import io.legado.app.model.review.ParagraphReplyTreeBuilder
 import io.legado.app.ui.book.read.page.entities.column.formatParagraphReviewCount
 import io.legado.app.ui.book.read.page.entities.column.reviewColumnLocalBaseline
+import io.legado.app.ui.book.read.page.entities.column.reviewColumnTextSize
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
@@ -25,15 +26,59 @@ class ParagraphReviewUiModelsTest {
         )
     }
 
-    /** 验证头像只接受 HTTPS，HTTP、相对地址和畸形值统一回退占位。 */
+    /** 验证头像保留 HTTPS、升级 HTTP，并拒绝相对地址和畸形值。 */
     @Test
-    fun avatarValidator_acceptsOnlyHttps() {
+    fun avatarValidator_keepsHttpsAndUpgradesHttp() {
         assertEquals("https://example.invalid/avatar.png", safeParagraphReviewAvatar(
             "https://example.invalid/avatar.png"
         ))
-        assertNull(safeParagraphReviewAvatar("http://example.invalid/avatar.png"))
+        assertEquals("https://example.invalid/avatar.png", safeParagraphReviewAvatar(
+            "http://example.invalid/avatar.png"
+        ))
         assertNull(safeParagraphReviewAvatar("/avatar.png"))
         assertNull(safeParagraphReviewAvatar("not a url"))
+        assertNull(safeParagraphReviewAvatar("ftp://example.invalid/avatar.png"))
+        assertNull(safeParagraphReviewAvatar("http://"))
+    }
+
+    /** 验证纯色主题精确保留背景色，图片主题使用阅读背景均值色。 */
+    @Test
+    fun reviewPalette_selectsReaderBackgroundByType() {
+        val solid = 0xFFEEDDBB.toInt()
+        val mean = 0xFF778899.toInt()
+
+        assertEquals(
+            solid,
+            resolveParagraphReviewBackgroundColor(0, solid, mean),
+        )
+        assertEquals(
+            mean,
+            resolveParagraphReviewBackgroundColor(0, null, mean),
+        )
+        assertEquals(
+            mean,
+            resolveParagraphReviewBackgroundColor(1, solid, mean),
+        )
+        assertEquals(
+            mean,
+            resolveParagraphReviewBackgroundColor(2, solid, mean),
+        )
+    }
+
+    /** 验证主色保持阅读正文色，辅助、强调和反馈色只调整透明度。 */
+    @Test
+    fun reviewPalette_derivesAllRolesFromReaderTextColor() {
+        val palette = paragraphReviewPalette(
+            background = 0xFF102030.toInt(),
+            textColor = 0x80112233.toInt(),
+        )
+
+        assertEquals(0xFF102030.toInt(), palette.background)
+        assertEquals(0x80112233.toInt(), palette.primaryText)
+        assertEquals(0xA3112233.toInt(), palette.secondaryText)
+        assertEquals(0xFF112233.toInt(), palette.accent)
+        assertEquals(0x38112233, palette.divider)
+        assertEquals(0x24112233, palette.ripple)
     }
 
     /** 验证图片投影只保留 HTTPS，并保持有效图片的服务端顺序。 */
@@ -171,7 +216,7 @@ class ParagraphReviewUiModelsTest {
         assertEquals("2000-01-01 00:00", presentation.time)
         assertEquals(7, presentation.diggCount)
         assertEquals(8, presentation.replyCount)
-        assertNull(presentation.avatarUrl)
+        assertEquals("https://example.invalid/avatar.png", presentation.avatarUrl)
         assertFalse(presentation.canOpenReplies)
         assertTrue(
             presentParagraphReviewComment(
@@ -401,6 +446,14 @@ class ParagraphReviewUiModelsTest {
     @Test
     fun reviewColumn_usesLineLocalBaseline() {
         assertEquals(52f, reviewColumnLocalBaseline(lineBase = 412f, lineTop = 360f), 0f)
+    }
+
+    /** 验证角标字号随正文高度变化，并为三位和上限文本保留边距。 */
+    @Test
+    fun reviewColumnTextSize_scalesDownForLongCounts() {
+        assertEquals(26f, reviewColumnTextSize(height = 50f, textLength = 1), 0f)
+        assertEquals(20f, reviewColumnTextSize(height = 50f, textLength = 3), 0f)
+        assertEquals(16f, reviewColumnTextSize(height = 50f, textLength = 4), 0f)
     }
 
     /** 创建最小回复树节点。 */

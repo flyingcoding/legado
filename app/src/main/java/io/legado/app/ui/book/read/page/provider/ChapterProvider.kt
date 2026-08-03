@@ -2,6 +2,7 @@ package io.legado.app.ui.book.read.page.provider
 
 import androidx.core.net.toUri
 
+import android.graphics.Paint
 import android.graphics.Paint.FontMetrics
 import android.graphics.RectF
 import android.graphics.Typeface
@@ -883,9 +884,10 @@ object ChapterProvider {
         getPaints(typeface).let {
             titlePaint = it.first
             contentPaint = it.second
-//            reviewPaint.color = contentPaint.color
-//            reviewPaint.textSize = contentPaint.textSize * 0.45f
-//            reviewPaint.textAlign = Paint.Align.CENTER
+            reviewPaint.set(contentPaint)
+            reviewPaint.textSize = contentPaint.textSize * 0.45f
+            reviewPaint.textAlign = Paint.Align.CENTER
+            reviewPaint.style = Paint.Style.FILL
         }
         //间距
         lineSpacingExtra = ReadBookConfig.lineSpacingExtra / 10f

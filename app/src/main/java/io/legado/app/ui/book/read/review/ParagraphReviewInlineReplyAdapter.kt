@@ -18,6 +18,7 @@ internal class ParagraphReviewInlineReplyAdapter(
     context: Context,
     private val sourceUrl: String,
     val commentId: String,
+    private val palette: ParagraphReviewPalette,
     private val onRetry: (String) -> Unit,
     private val onLoadMore: (String) -> Unit,
     private val onImageClick: (ImageView, String) -> Unit,
@@ -28,6 +29,7 @@ internal class ParagraphReviewInlineReplyAdapter(
 
     init {
         addFooterView { ViewLoadMoreBinding.bind(loadMoreView) }
+        loadMoreView.applyParagraphReviewPalette(palette)
         loadMoreView.setOnClickListener {
             when {
                 state.initialLoading || state.refreshing || state.loadingMore -> Unit
@@ -51,7 +53,7 @@ internal class ParagraphReviewInlineReplyAdapter(
         item: ParagraphReviewReplyListItem,
         payloads: MutableList<Any>,
     ) {
-        binding.bindParagraphReviewReply(context, sourceUrl, item, onImageClick)
+        binding.bindParagraphReviewReply(context, sourceUrl, item, palette, onImageClick)
     }
 
     /** 内联回复本身只提供图片预览，不注册写操作或二次下钻。 */

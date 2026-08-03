@@ -5,7 +5,10 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:minHeight="112dp"
-    android:padding="16dp">
+    android:paddingStart="16dp"
+    android:paddingTop="16dp"
+    android:paddingEnd="16dp"
+    android:paddingBottom="8dp">
 
     <androidx.appcompat.widget.AppCompatImageView
         android:id="@+id/iv_avatar"
@@ -24,55 +27,50 @@
         android:layout_marginStart="12dp"
         android:ellipsize="end"
         android:maxLines="1"
-        android:textColor="@color/primaryText"
-        android:textStyle="bold"
+        android:textSize="14sp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toEndOf="@id/iv_avatar"
         app:layout_constraintTop_toTopOf="@id/iv_avatar"
         tools:text="用户名" />
 
     <TextView
-        android:id="@+id/tv_time"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="12dp"
-        android:layout_marginTop="4dp"
-        android:textColor="@color/tv_text_summary"
-        android:textSize="12sp"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toEndOf="@id/iv_avatar"
-        app:layout_constraintTop_toBottomOf="@id/tv_user"
-        tools:text="2026-07-30 12:30" />
-
-    <TextView
         android:id="@+id/tv_content"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_marginTop="12dp"
-        android:textColor="@color/primaryText"
+        android:layout_marginTop="6dp"
+        android:lineSpacingExtra="2dp"
         android:textIsSelectable="true"
+        android:textSize="15sp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="@id/tv_user"
-        app:layout_constraintTop_toBottomOf="@id/iv_avatar"
+        app:layout_constraintTop_toBottomOf="@id/tv_user"
         tools:text="评论纯文本内容" />
+
+    <TextView
+        android:id="@+id/tv_time"
+        android:layout_width="0dp"
+        android:layout_height="36dp"
+        android:gravity="center_vertical"
+        android:textSize="12sp"
+        app:layout_constraintEnd_toStartOf="@id/tv_likes"
+        app:layout_constraintStart_toStartOf="@id/tv_user"
+        app:layout_constraintTop_toBottomOf="@id/rv_images"
+        tools:text="2026-07-30 12:30" />
 
     <TextView
         android:id="@+id/tv_likes"
         android:layout_width="wrap_content"
-        android:layout_height="40dp"
+        android:layout_height="36dp"
         android:gravity="center_vertical"
-        android:textColor="@color/tv_text_summary"
         android:textSize="12sp"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/rv_images"
+        app:layout_constraintTop_toTopOf="@id/tv_time"
         tools:text="赞 12" />
 
     <View
         android:id="@+id/reply_divider"
         android:layout_width="28dp"
         android:layout_height="1dp"
-        android:alpha="0.35"
-        android:background="@color/tv_text_summary"
         android:visibility="gone"
         app:layout_constraintBottom_toBottomOf="@id/tv_replies"
         app:layout_constraintStart_toStartOf="@id/tv_user"
@@ -82,21 +80,18 @@
     <TextView
         android:id="@+id/tv_replies"
         android:layout_width="wrap_content"
-        android:layout_height="40dp"
-        android:background="?attr/selectableItemBackground"
+        android:layout_height="48dp"
         android:clickable="true"
         android:focusable="true"
         android:gravity="center_vertical"
         android:layout_marginStart="8dp"
         android:paddingEnd="4dp"
         android:paddingStart="0dp"
-        android:textColor="@color/accent"
         android:textSize="13sp"
         android:visibility="gone"
         app:layout_constraintStart_toEndOf="@id/reply_divider"
-        app:layout_constraintTop_toBottomOf="@id/tv_likes"
+        app:layout_constraintTop_toBottomOf="@id/tv_time"
         app:drawableEndCompat="@drawable/ic_arrow_drop_down"
-        app:drawableTint="@color/accent"
         tools:text="展开3条回复"
         tools:visibility="visible" />
 
@@ -104,7 +99,7 @@
         android:id="@+id/rv_images"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_marginTop="8dp"
+        android:layout_marginTop="10dp"
         android:nestedScrollingEnabled="false"
         android:orientation="horizontal"
         android:overScrollMode="never"
@@ -121,7 +116,7 @@
         android:id="@+id/inline_reply_container"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_marginTop="4dp"
+        android:layout_marginTop="2dp"
         android:orientation="vertical"
         android:visibility="gone"
         app:layout_constraintBottom_toBottomOf="parent"
@@ -143,11 +138,9 @@
             android:id="@+id/tv_inline_reply_state"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:background="?attr/selectableItemBackground"
             android:gravity="center"
             android:minHeight="48dp"
             android:padding="8dp"
-            android:textColor="@color/tv_text_summary"
             android:textSize="13sp"
             android:visibility="gone"
             tools:text="暂无回复"

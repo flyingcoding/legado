@@ -122,10 +122,14 @@ fun formatParagraphReviewTime(
     }.getOrDefault(unknown)
 }
 
-/** 只允许 HTTPS 头像地址进入 Glide，其他地址统一使用本地占位。 */
+/** 保留 HTTPS 头像并只升级合法 HTTP 地址的 scheme，其他地址回退占位。 */
 fun safeParagraphReviewAvatar(url: String?): String? {
     val parsed = url?.toHttpUrlOrNull() ?: return null
-    return parsed.toString().takeIf { parsed.scheme == "https" }
+    return when (parsed.scheme) {
+        "https" -> parsed.toString()
+        "http" -> parsed.newBuilder().scheme("https").build().toString()
+        else -> null
+    }
 }
 
 /** 只允许 HTTPS 段评图片地址进入 Glide。 */

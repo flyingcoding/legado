@@ -11,9 +11,10 @@ import io.legado.app.databinding.ItemParagraphReviewReplyBinding
 import io.legado.app.model.review.ParagraphComment
 
 /** 以受限视觉缩进展示完整回复树，不提供任何写操作。 */
-class ParagraphReviewReplyAdapter(
+internal class ParagraphReviewReplyAdapter(
     context: Context,
     private val sourceUrl: String,
+    private val palette: ParagraphReviewPalette,
     private val onImageClick: (ImageView, String) -> Unit,
 ) : RecyclerAdapter<ParagraphReviewReplyListItem, ItemParagraphReviewReplyBinding>(context) {
 
@@ -57,6 +58,7 @@ class ParagraphReviewReplyAdapter(
             context = context,
             sourceUrl = sourceUrl,
             comment = comment,
+            palette = palette,
             repliesClickable = false,
             onImageClick = onImageClick,
         )
@@ -73,7 +75,7 @@ class ParagraphReviewReplyAdapter(
         item: ParagraphReviewReplyListItem,
         payloads: MutableList<Any>,
     ) {
-        binding.bindParagraphReviewReply(context, sourceUrl, item, onImageClick)
+        binding.bindParagraphReviewReply(context, sourceUrl, item, palette, onImageClick)
     }
 
     /** 回复列表没有可触发的写操作或下钻事件。 */

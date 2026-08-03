@@ -13,9 +13,10 @@ import io.legado.app.utils.gone
 import io.legado.app.utils.visible
 
 /** 绑定只读主评，并为有回复的评论提供独立展开入口。 */
-class ParagraphReviewCommentAdapter(
+internal class ParagraphReviewCommentAdapter(
     context: Context,
     private val sourceUrl: String,
+    private val palette: ParagraphReviewPalette,
     private val onRepliesClick: (ParagraphComment) -> Unit,
     private val onReplyRetry: (String) -> Unit,
     private val onReplyLoadMore: (String) -> Unit,
@@ -42,6 +43,7 @@ class ParagraphReviewCommentAdapter(
             context = context,
             sourceUrl = sourceUrl,
             comment = item,
+            palette = palette,
             repliesClickable = true,
             repliesExpanded = selectedState != null,
             onImageClick = onImageClick,
@@ -143,6 +145,7 @@ class ParagraphReviewCommentAdapter(
                 context = context,
                 sourceUrl = sourceUrl,
                 commentId = comment.commentId,
+                palette = palette,
                 onRetry = onReplyRetry,
                 onLoadMore = onReplyLoadMore,
                 onImageClick = onImageClick,
